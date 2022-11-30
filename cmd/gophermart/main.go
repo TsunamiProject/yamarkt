@@ -19,4 +19,7 @@ func main() {
 	userService := service.NewUserService(pStorage)
 	userHandler := handler.NewUserHandler(userService)
 	log.Println(userHandler)
+	balanceService := service.NewBalanceService(pStorage)
+	balanceHandler := handler.NewBalanceHandler(balanceService)
+	log.Println(balanceHandler)
 }
