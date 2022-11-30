@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/spf13/pflag"
@@ -16,9 +17,11 @@ const (
 	defaultDatabaseDSN   = "user=pqgotest dbname=pqgotest sslmode=verify-full"
 )
 
+const StorageContextTimeout = time.Second
+
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	AccuralURL    string `env:"FILE_STORAGE_PATH"`
+	AccuralURL    string `env:"ACCURAL_URL"`
 	DatabaseDSN   string `env:"DATABASE_DSN"`
 }
 
@@ -29,7 +32,7 @@ func New() *Config {
 		log.Fatal(err)
 	}
 	flagSet := pflag.FlagSet{}
-	addrFlag := flagSet.StringP("-addr", "a", config.ServerAddress, "Server address with format: host:port")
+	addrFlag := flagSet.StringP("-addr", "a", config.ServerAddress, "Server address: host:port")
 	accuralURL := flagSet.StringP("-acc", "f", config.AccuralURL, "Accural service URL")
 	dbDSNFlag := flagSet.StringP("-dbDsn", "d", config.DatabaseDSN, "Database DSN string")
 
