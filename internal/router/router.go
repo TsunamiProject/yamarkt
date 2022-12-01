@@ -6,16 +6,16 @@ import (
 	"github.com/TsunamiProject/yamarkt/internal/handler"
 )
 
-func NewRouter(uh *handler.UserHandler) chi.Router {
+func NewRouter(uh *handler.UserHandler, bh *handler.BalanceHandler, oh *handler.OrderHandler) chi.Router {
 	router := chi.NewRouter()
 
 	router.Group(func(r chi.Router) {
 		router.Use() //middleware
-		router.Post("/api/user/orders", nil)
-		router.Post("/apu/user/balance/withdrawals", nil)
-		router.Get("/api/user/orders", nil)
-		router.Get("/api/user/balance", nil)
-		router.Get("/api/user/withdrawals", nil)
+		router.Post("/api/user/orders", oh.CreateOrder)
+		router.Post("/apu/user/balance/withdrawals", bh.NewWithdrawal)
+		router.Get("/api/user/orders", oh.OrderList)
+		router.Get("/api/user/balance", bh.GetCurrentBalance)
+		router.Get("/api/user/withdrawals", bh.GetWithdrawalList)
 	})
 
 	router.Group(func(r chi.Router) {
