@@ -26,3 +26,13 @@ type CurrentBalance struct {
 	Current   decimal.Decimal `json:"current"`
 	Withdrawn int             `json:"withdrawn"`
 }
+
+type OrderInfo struct {
+	Order  string `json:"order"`
+	Status string `json:"status"`
+}
+
+type OrderList struct {
+	Accrual    decimal.Decimal `json:"accrual"`
+	UploadedAt time.Time       `json:"uploaded_at"`
+}
