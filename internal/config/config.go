@@ -21,7 +21,7 @@ const StorageContextTimeout = time.Second
 
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	AccuralURL    string `env:"ACCURAL_URL"`
+	AccrualURL    string `env:"ACCRUAL_URL"`
 	DatabaseDSN   string `env:"DATABASE_DSN"`
 }
 
@@ -33,7 +33,7 @@ func New() *Config {
 	}
 	flagSet := pflag.FlagSet{}
 	addrFlag := flagSet.StringP("-addr", "a", config.ServerAddress, "Server address: host:port")
-	accuralURL := flagSet.StringP("-acc", "f", config.AccuralURL, "Accural service URL")
+	accrualFlag := flagSet.StringP("-acc", "f", config.AccrualURL, ""+"Accrual service URL")
 	dbDSNFlag := flagSet.StringP("-dbDsn", "d", config.DatabaseDSN, "Database DSN string")
 
 	err = flagSet.Parse(os.Args[1:])
@@ -41,7 +41,7 @@ func New() *Config {
 		log.Fatal("Error while parsing sys Args")
 	}
 	config.ServerAddress = *addrFlag
-	config.AccuralURL = *accuralURL
+	config.AccrualURL = *accrualFlag
 	config.DatabaseDSN = *dbDSNFlag
 
 	err = validateConfig(&config)
@@ -68,7 +68,7 @@ func validateURL(s string) error {
 
 func validateConfig(c *Config) error {
 	addrErr := validateURL(c.ServerAddress)
-	accuralURLerr := validateURL(c.AccuralURL)
+	accuralURLerr := validateURL(c.AccrualURL)
 	if addrErr != nil {
 		return errors.New("wrong server address param")
 	}
