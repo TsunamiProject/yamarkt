@@ -22,4 +22,7 @@ func main() {
 	balanceService := service.NewBalanceService(pStorage)
 	balanceHandler := handler.NewBalanceHandler(balanceService)
 	log.Println(balanceHandler)
+	orderService := service.NewOrderService(pStorage, cfg.AccrualURL)
+	orderHandler := handler.NewOrderHandler(orderService)
+	log.Println(orderHandler)
 }
