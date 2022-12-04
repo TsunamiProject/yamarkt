@@ -20,14 +20,17 @@ func NewBalanceService(bs BalanceStorage) *BalanceService {
 	return &BalanceService{balanceStorage: bs}
 }
 
-func (bs *BalanceService) CreateWithdrawal(ctx context.Context, login string, w models.Withdrawal) error {
-	return nil
+func (bs *BalanceService) CreateWithdrawal(ctx context.Context, login string, w models.Withdrawal) (err error) {
+	err = bs.balanceStorage.CreateWithdrawal(ctx, login, w)
+	return err
 }
 
 func (bs *BalanceService) GetWithdrawalList(ctx context.Context, login string) (wl []models.WithdrawalList, err error) {
-	return nil, nil
+	wl, err = bs.balanceStorage.GetWithdrawalList(ctx, login)
+	return wl, err
 }
 
 func (bs *BalanceService) GetCurrentBalance(ctx context.Context, login string) (cb models.CurrentBalance, err error) {
-	return models.CurrentBalance{}, nil
+	cb, err = bs.balanceStorage.GetCurrentBalance(ctx, login)
+	return cb, nil
 }
