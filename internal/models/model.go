@@ -36,3 +36,7 @@ type OrderList struct {
 	Accrual    decimal.Decimal `json:"accrual"`
 	UploadedAt time.Time       `json:"uploaded_at"`
 }
+
+type AccrualJSON struct {
+	Order string `json:"order"`
+}
