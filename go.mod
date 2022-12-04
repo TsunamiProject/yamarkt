@@ -3,6 +3,7 @@ module github.com/TsunamiProject/yamarkt
 go 1.18
 
 require (
+	github.com/ShiraazMoollatjie/goluhn v0.0.0-20211017190329-0d86158c056a // indirect
 	github.com/caarlos0/env/v6 v6.10.1 // indirect
 	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
