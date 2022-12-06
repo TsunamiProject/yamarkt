@@ -33,7 +33,7 @@ func New() *Config {
 	}
 	flagSet := pflag.FlagSet{}
 	addrFlag := flagSet.StringP("-addr", "a", config.ServerAddress, "Server address: host:port")
-	accrualFlag := flagSet.StringP("-acc", "f", config.AccrualURL, ""+"Accrual service URL")
+	accrualFlag := flagSet.StringP("-acc", "f", config.AccrualURL, "Accrual service URL")
 	dbDSNFlag := flagSet.StringP("-dbDsn", "d", config.DatabaseDSN, "Database DSN string")
 
 	err = flagSet.Parse(os.Args[1:])
@@ -73,7 +73,7 @@ func validateConfig(c *Config) error {
 		return errors.New("wrong server address param")
 	}
 	if accuralURLerr != nil {
-		return errors.New("wrong accural url param")
+		return errors.New("wrong accrual url param")
 	}
 	return nil
 }
