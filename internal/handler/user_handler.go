@@ -43,7 +43,7 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 	err = uh.service.Auth(ctx, credInstance)
-	if errors.As(err, &customErr.ErrUserDoesNotExist) {
+	if errors.As(err, &customErr.ErrUserDoesNotExist) || errors.As(err, &customErr.ErrWrongPassword) {
 		w.WriteHeader(http.StatusUnauthorized)
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
