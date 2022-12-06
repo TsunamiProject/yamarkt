@@ -28,8 +28,8 @@ func NewOrderService(os OrderStorage, accURL string) *OrderService {
 	}
 }
 
-func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID string) error {
-	err := os.storage.CreateOrder(ctx, login, orderID)
+func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID string) (err error) {
+	err = os.storage.CreateOrder(ctx, login, orderID)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID s
 
 	//TODO: worker for updating order info?
 
-	return nil
+	return err
 }
 
 func (os *OrderService) OrderList(ctx context.Context, login string) (ol []models.OrderList, err error) {
