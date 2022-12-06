@@ -8,7 +8,7 @@ import (
 
 type Credentials struct {
 	Login string `json:"login"`
-	Pass  string `json:"pass"`
+	Pass  string `json:"password"`
 }
 
 type Withdrawal struct {
