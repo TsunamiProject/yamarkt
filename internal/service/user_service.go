@@ -22,24 +22,24 @@ func NewUserService(userStorage UserStorage) *UserService {
 	return &UserService{userStorage: userStorage}
 }
 
-func (us *UserService) Register(ctx context.Context, cred models.Credentials) error {
+func (us *UserService) Register(ctx context.Context, cred models.Credentials) (err error) {
 	encodedPass, err := Encode(cred.Pass)
 	if err != nil {
 		log.Printf("encoding password error: %s", err)
 		return err
 	}
 	err = us.userStorage.Register(ctx, cred.Login, encodedPass)
-	return nil
+	return err
 }
 
-func (us *UserService) Auth(ctx context.Context, cred models.Credentials) error {
+func (us *UserService) Auth(ctx context.Context, cred models.Credentials) (err error) {
 	encodedPass, err := Encode(cred.Pass)
 	if err != nil {
 		log.Printf("encoding password error: %s", err)
 		return err
 	}
 	err = us.userStorage.Auth(ctx, cred.Login, encodedPass)
-	return nil
+	return err
 }
 
 func Encode(src string) (encodedString string, err error) {
