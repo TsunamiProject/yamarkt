@@ -10,4 +10,5 @@ var (
 	ErrUnauthorizedUser           = errors.New("unauthorized user")
 	ErrNoOrders                   = errors.New("no orders created by login")
 	ErrNoFunds                    = errors.New("no funds on login balance")
+	ErrWrongPassword              = errors.New("wrong password received")
 )
