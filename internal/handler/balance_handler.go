@@ -59,7 +59,7 @@ func (bh BalanceHandler) NewWithdrawal(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusPaymentRequired)
 	} else if errors.As(err, &customErr.ErrUnauthorizedUser) {
 		w.WriteHeader(http.StatusUnauthorized)
-	} else if errors.As(err, &customErr.ErrOrderAlreadyExists) {
+	} else if errors.As(err, &customErr.ErrWithdrawalOrderAlreadyExist) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -75,7 +75,7 @@ func (bh BalanceHandler) GetWithdrawalList(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 	withdrawalList, err := bh.service.GetWithdrawalList(ctx, login)
-	if errors.As(err, &customErr.ErrNoOrders) {
+	if errors.As(err, &customErr.ErrNoWithdrawals) {
 		w.WriteHeader(http.StatusNoContent)
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
