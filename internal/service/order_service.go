@@ -52,7 +52,7 @@ func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID s
 	}
 	defer resp.Body.Close()
 
-	//TODO: worker for updating order info?
+	//TODO: for while waiting new order status
 
 	return err
 }
