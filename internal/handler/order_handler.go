@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/ShiraazMoollatjie/goluhn"
+	"github.com/go-chi/jwtauth/v5"
 
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	customErr "github.com/TsunamiProject/yamarkt/internal/customerrs"
@@ -31,6 +32,19 @@ func NewOrderHandler(osp OrderServiceProvider) *OrderHandler {
 }
 
 func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		log.Printf("error while getting claims from create order request context: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	login, ok := claims["login"].(string)
+	if !ok {
+		log.Printf("error while getting login from claims in create order handler:%s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error while reading body: %s", err)
@@ -53,9 +67,6 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 
-	//TODO: get login from request
-	login := ""
-
 	err = oh.service.CreateOrder(ctx, login, stringBody)
 	if errors.As(err, &customErr.ErrOrderAlreadyExists) {
 		w.WriteHeader(http.StatusOK)
@@ -68,8 +79,19 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
-	//TODO: get login from request
-	login := ""
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		log.Printf("error while getting claims from order list request context: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	login, ok := claims["login"].(string)
+	if !ok {
+		log.Printf("error while getting login from claims in order list handler: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 
@@ -77,9 +99,6 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 	if errors.As(err, &customErr.ErrNoOrders) {
 		log.Printf("no orders for %s login", login)
 		w.WriteHeader(http.StatusNoContent)
-	} else if errors.As(err, &customErr.ErrUnauthorizedUser) {
-		log.Printf("unauthorized login: %s", login)
-		w.WriteHeader(http.StatusUnauthorized)
 	} else if err != nil {
 		log.Printf(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

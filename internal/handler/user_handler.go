@@ -33,11 +33,13 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error while reading body: %s", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
 	err = json.Unmarshal(body, &credInstance)
 	if err != nil {
 		log.Printf("Request body unmarshal error: %s", err)
 		http.Error(w, "Invalid credentials JSON received", http.StatusBadRequest)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
@@ -45,11 +47,19 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 	err = uh.service.Auth(ctx, credInstance)
 	if errors.As(err, &customErr.ErrUserDoesNotExist) || errors.As(err, &customErr.ErrWrongPassword) {
 		w.WriteHeader(http.StatusUnauthorized)
+		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	//TODO: create jwt token for auth bearer
-	jwtToken := ""
+	_, jwtToken, err := config.TokenAuth.Encode(map[string]interface{}{
+		"login": credInstance.Login,
+	})
+	if err != nil {
+		log.Printf("error while encoding auth token: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", jwtToken))
 	w.WriteHeader(http.StatusOK)
 }
@@ -60,6 +70,7 @@ func (uh UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error while reading body: %s", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
 	err = json.Unmarshal(body, &credInstance)
 	if err != nil {
@@ -72,11 +83,19 @@ func (uh UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	err = uh.service.Register(ctx, credInstance)
 	if errors.As(err, &customErr.ErrUserAlreadyExists) {
 		w.WriteHeader(http.StatusConflict)
+		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	//TODO: create jwt token for auth bearer
-	jwtToken := ""
+	_, jwtToken, err := config.TokenAuth.Encode(map[string]interface{}{
+		"login": credInstance.Login,
+	})
+	if err != nil {
+		log.Printf("error while encoding auth token: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", jwtToken))
 	w.WriteHeader(http.StatusOK)
 }

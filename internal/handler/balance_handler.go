@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/ShiraazMoollatjie/goluhn"
+	"github.com/go-chi/jwtauth/v5"
 
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	customErr "github.com/TsunamiProject/yamarkt/internal/customerrs"
@@ -30,8 +31,18 @@ func NewBalanceHandler(bhp BalanceServiceProvider) *BalanceHandler {
 }
 
 func (bh BalanceHandler) NewWithdrawal(w http.ResponseWriter, r *http.Request) {
-	//TODO: get login from request
-	login := ""
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		log.Printf("error while getting claims from new withdrawal request context: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	login, ok := claims["login"].(string)
+	if !ok {
+		log.Printf("error while getting login from claims in new withdrawal handler: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -57,8 +68,6 @@ func (bh BalanceHandler) NewWithdrawal(w http.ResponseWriter, r *http.Request) {
 	err = bh.service.CreateWithdrawal(ctx, login, withdrawal)
 	if errors.As(err, &customErr.ErrNoFunds) {
 		w.WriteHeader(http.StatusPaymentRequired)
-	} else if errors.As(err, &customErr.ErrUnauthorizedUser) {
-		w.WriteHeader(http.StatusUnauthorized)
 	} else if errors.As(err, &customErr.ErrWithdrawalOrderAlreadyExist) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	} else if err != nil {
@@ -69,8 +78,18 @@ func (bh BalanceHandler) NewWithdrawal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (bh BalanceHandler) GetWithdrawalList(w http.ResponseWriter, r *http.Request) {
-	//TODO: get login from request
-	login := ""
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		log.Printf("error while getting claims from get withdrawal list request context: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	login, ok := claims["login"].(string)
+	if !ok {
+		log.Printf("error while getting login from claims in get withdrawals list handler: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
@@ -90,8 +109,18 @@ func (bh BalanceHandler) GetWithdrawalList(w http.ResponseWriter, r *http.Reques
 }
 
 func (bh BalanceHandler) GetCurrentBalance(w http.ResponseWriter, r *http.Request) {
-	//TODO: get login from request
-	login := ""
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		log.Printf("error while getting claims from get current balance request context: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	login, ok := claims["login"].(string)
+	if !ok {
+		log.Printf("error while getting login from claims in get current balance handler: %s", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
