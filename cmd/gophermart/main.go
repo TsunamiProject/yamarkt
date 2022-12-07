@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
 
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/handler"
@@ -19,24 +23,38 @@ func main() {
 
 	pStorage, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error while initializing posgtres storage: %s", err)
 	}
 
 	userService := service.NewUserService(pStorage)
 	userHandler := handler.NewUserHandler(userService)
-	log.Println(userHandler)
 
 	balanceService := service.NewBalanceService(pStorage)
 	balanceHandler := handler.NewBalanceHandler(balanceService)
-	log.Println(balanceHandler)
 
 	orderService := service.NewOrderService(pStorage, cfg.AccrualURL)
 	orderHandler := handler.NewOrderHandler(orderService)
-	log.Println(orderHandler)
 
 	router := appRouter.NewRouter(userHandler, balanceHandler, orderHandler)
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	var wg sync.WaitGroup
 	httpServer := &http.Server{Addr: cfg.ServerAddress, Handler: router}
-	log.Fatal(httpServer.ListenAndServe())
+	wg.Add(1)
+	go gracefulShutdown(ctx, &wg, httpServer)
+	err = httpServer.ListenAndServe()
+	if err != nil {
+		log.Fatalf("error on http server start: %s", err)
+	}
+	wg.Wait()
+	stop()
+}
 
+func gracefulShutdown(ctx context.Context, wg *sync.WaitGroup, srv *http.Server) {
+	<-ctx.Done()
+	err := srv.Shutdown(ctx)
+	if err != nil {
+		log.Printf("error while shutting down http server: %s", err)
+	}
+	wg.Done()
 }
