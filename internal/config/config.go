@@ -8,16 +8,20 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/spf13/pflag"
 )
 
 const (
-	defaultServerAddress = "localhost:8080"
-	defaultAccuralURL    = ""
-	defaultDatabaseDSN   = "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	defaultServerAddress  = "localhost:8080"
+	defaultAccuralURL     = ""
+	defaultDatabaseDSN    = "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	StorageContextTimeout = time.Second
+	TokenSignKey          = "g1o2p3h4e5r"
 )
 
-const StorageContextTimeout = time.Second
+var TokenAuth *jwtauth.JWTAuth = jwtauth.New(string(jwa.HS256), []byte(TokenSignKey), nil)
 
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
