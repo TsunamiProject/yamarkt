@@ -2,7 +2,9 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 
+	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/handler"
 	"github.com/TsunamiProject/yamarkt/internal/middleware"
 )
@@ -12,6 +14,8 @@ func NewRouter(uh *handler.UserHandler, bh *handler.BalanceHandler, oh *handler.
 	router.Use(middleware.GzipRespWriter, middleware.GzipReqReader)
 
 	router.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(config.TokenAuth))
+		r.Use(jwtauth.Authenticator)
 		router.Post("/api/user/orders", oh.CreateOrder)
 		router.Post("/apu/user/balance/withdrawals", bh.NewWithdrawal)
 		router.Get("/api/user/orders", oh.OrderList)
