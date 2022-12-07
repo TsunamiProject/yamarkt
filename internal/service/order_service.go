@@ -6,14 +6,17 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/models"
 )
 
 type OrderStorage interface {
 	CreateOrder(ctx context.Context, login string, orderID string) error
 	OrderList(ctx context.Context, login string) (ol []models.OrderList, err error)
+	UpdateOrder(ctx context.Context, login string, oi models.OrderInfo) (err error)
 }
 
 type OrderService struct {
@@ -60,4 +63,56 @@ func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID s
 func (os *OrderService) OrderList(ctx context.Context, login string) (ol []models.OrderList, err error) {
 	orderList, err := os.storage.OrderList(ctx, login)
 	return orderList, err
+}
+
+func (os *OrderService) UpdateOrderStatus(accrualURL string, orderID string, login string) {
+	for {
+		req, err := http.NewRequest("GET", accrualURL+"/api/orders"+orderID, nil)
+		if err != nil {
+			log.Printf("error while constructing request to accrual service :%s", err)
+			return
+		}
+		client := http.Client{
+			Timeout: 5 * time.Second,
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("error while making request to accrual service: %s", err)
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
+			log.Printf("recieved status code from accrual service: %v", resp.StatusCode)
+			return
+		}
+		log.Printf("status code %v recieved from accrual service", resp.StatusCode)
+		if resp.StatusCode == http.StatusOK {
+			oi := models.OrderInfo{}
+			err = json.NewDecoder(resp.Body).Decode(&oi)
+			if err != nil {
+				log.Printf("error while unmarshalling resp from accrual service: %s", err)
+				return
+			}
+
+			ctx, cancel := context.WithTimeout(req.Context(), config.StorageContextTimeout)
+			defer cancel()
+			err = os.storage.UpdateOrder(ctx, login, oi)
+			if err != nil {
+				log.Printf("error while updating order :%s", err)
+				return
+			}
+			if oi.Status == "INVALID" || oi.Status == "PROCESSED" {
+				log.Printf("order %s has updated status to %s", oi.Order, oi.Status)
+				return
+			}
+		}
+		if resp.StatusCode == http.StatusTooManyRequests {
+			timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
+			if err != nil {
+				log.Printf("error converting Retry-After to int:%s", err)
+				return
+			}
+			time.Sleep(time.Duration(timeout) * 1000 * time.Millisecond)
+		}
+	}
 }
