@@ -19,6 +19,7 @@ const (
 	defaultDatabaseDSN    = "user=pqgotest dbname=pqgotest sslmode=verify-full"
 	StorageContextTimeout = time.Second
 	TokenSignKey          = "g1o2p3h4e5r"
+	TokenTTL              = 20 * time.Minute
 )
 
 var TokenAuth *jwtauth.JWTAuth = jwtauth.New(string(jwa.HS256), []byte(TokenSignKey), nil)

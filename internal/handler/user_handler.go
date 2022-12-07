@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/jwtauth/v5"
+
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	customErr "github.com/TsunamiProject/yamarkt/internal/customerrs"
 	"github.com/TsunamiProject/yamarkt/internal/models"
@@ -52,9 +54,11 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	_, jwtToken, err := config.TokenAuth.Encode(map[string]interface{}{
+	claims := map[string]interface{}{
 		"login": credInstance.Login,
-	})
+	}
+	jwtauth.SetExpiryIn(claims, config.TokenTTL)
+	_, jwtToken, err := config.TokenAuth.Encode(claims)
 	if err != nil {
 		log.Printf("error while encoding auth token: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -88,9 +92,11 @@ func (uh UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	_, jwtToken, err := config.TokenAuth.Encode(map[string]interface{}{
+	claims := map[string]interface{}{
 		"login": credInstance.Login,
-	})
+	}
+	jwtauth.SetExpiryIn(claims, config.TokenTTL)
+	_, jwtToken, err := config.TokenAuth.Encode(claims)
 	if err != nil {
 		log.Printf("error while encoding auth token: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
