@@ -15,7 +15,7 @@ import (
 
 const (
 	defaultServerAddress  = "localhost:8080"
-	defaultAccuralURL     = ""
+	defaultAccuralURL     = "http://localhost:8080"
 	defaultDatabaseDSN    = "user=pqgotest dbname=pqgotest sslmode=verify-full"
 	StorageContextTimeout = time.Second
 	TokenSignKey          = "g1o2p3h4e5r"
@@ -25,9 +25,9 @@ const (
 var TokenAuth *jwtauth.JWTAuth = jwtauth.New(string(jwa.HS256), []byte(TokenSignKey), nil)
 
 type Config struct {
-	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	AccrualURL    string `env:"ACCRUAL_URL"`
-	DatabaseDSN   string `env:"DATABASE_DSN"`
+	ServerAddress string `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
+	AccrualURL    string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	DatabaseDSN   string `env:"DATABASE_URI"`
 }
 
 func New() *Config {
@@ -38,7 +38,7 @@ func New() *Config {
 	}
 	flagSet := pflag.FlagSet{}
 	addrFlag := flagSet.StringP("-addr", "a", config.ServerAddress, "Server address: host:port")
-	accrualFlag := flagSet.StringP("-acc", "f", config.AccrualURL, "Accrual service URL")
+	accrualFlag := flagSet.StringP("-acc", "r", config.AccrualURL, "Accrual service URL")
 	dbDSNFlag := flagSet.StringP("-dbDsn", "d", config.DatabaseDSN, "Database DSN string")
 
 	err = flagSet.Parse(os.Args[1:])
