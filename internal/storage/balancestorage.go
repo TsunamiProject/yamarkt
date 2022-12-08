@@ -31,7 +31,7 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 			}
 			return err
 		}
-		if decimal.Decimal.Cmp(withdrawal.Sum, balanceCurrent) > 0 {
+		if withdrawal.Sum.GreaterThan(balanceCurrent) {
 			log.Printf("%s", customErr.ErrNoFunds)
 			rollbackErr := tx.Rollback()
 			if rollbackErr != nil {
