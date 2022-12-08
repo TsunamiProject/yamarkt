@@ -110,6 +110,7 @@ func UpdateOrderStatus(wg *sync.WaitGroup, orderStorage OrderStorage, accrualURL
 
 			ctx, cancel := context.WithTimeout(req.Context(), config.StorageContextTimeout)
 			defer cancel()
+			log.Printf("accrual:", oi.Accrual)
 			err = orderStorage.UpdateOrder(ctx, login, oi)
 			if err != nil {
 				log.Printf("error while updating order :%s", err)
