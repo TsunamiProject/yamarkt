@@ -11,6 +11,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/lestrrat-go/jwx/v2 v2.0.8
+	github.com/rs/zerolog v1.15.0
 	github.com/shopspring/decimal v1.2.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
