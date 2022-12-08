@@ -94,13 +94,12 @@ func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login strin
 			log.Printf("recieved status code from accrual service: %v", resp.StatusCode)
 			return err
 		}
-		log.Printf("status code %v recieved from accrual service", resp.StatusCode)
+		log.Printf("status code %v received from accrual service", resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
 			oi := models.OrderInfo{}
 			err = json.NewDecoder(resp.Body).Decode(&oi)
 			if err != nil {
 				log.Printf("error while unmarshalling resp from accrual service: %s", err)
-				return err
 			}
 
 			ctx, cancel := context.WithTimeout(req.Context(), config.StorageContextTimeout)
@@ -108,18 +107,16 @@ func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login strin
 			err = orderStorage.UpdateOrder(ctx, login, oi)
 			if err != nil {
 				log.Printf("error while updating order :%s", err)
-				return err
 			}
 			if oi.Status == "INVALID" || oi.Status == "PROCESSED" {
 				log.Printf("order %s has updated status to %s", oi.Order, oi.Status)
-				return nil
+				return
 			}
 		}
 		if resp.StatusCode == http.StatusTooManyRequests {
 			timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
 			if err != nil {
 				log.Printf("error converting Retry-After to int:%s", err)
-				return err
 			}
 			time.Sleep(time.Duration(timeout) * 1000 * time.Millisecond)
 		}
