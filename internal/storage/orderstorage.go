@@ -89,7 +89,7 @@ func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi mod
 		}
 	}
 	{
-		if decimal.Decimal.Cmp(oi.Accrual, decimal.NewFromInt(0)) > 0 {
+		if oi.Accrual.GreaterThan(decimal.NewFromInt(0)) {
 			var dbBalance decimal.Decimal
 			err = ps.PostgresQL.QueryRow(getUserBalanceQuery, login).Scan(&dbBalance)
 			if err != nil {
@@ -100,8 +100,9 @@ func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi mod
 				}
 				return err
 			}
+			dbBalance = oi.Accrual.Add(dbBalance)
 
-			_, err = ps.PostgresQL.Exec(updateUserBalanceQuery, login, oi.Accrual.Add(dbBalance))
+			_, err = ps.PostgresQL.Exec(updateUserBalanceQuery, login, dbBalance)
 			if err != nil {
 				log.Printf("error while updating user balance: %s", err)
 				rollbackErr := tx.Rollback()
