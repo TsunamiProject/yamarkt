@@ -6,7 +6,7 @@ var (
 	ErrUserDoesNotExist            = errors.New("user doesn't exist")
 	ErrUserAlreadyExists           = errors.New("user already exists")
 	ErrOrderAlreadyExists          = errors.New("order already exists")
-	ErrOrderCreatedByAnotherLogin  = errors.New("order already created by another customer")
+	ErrOrderCreatedByAnotherLogin  = errors.New("order already created by another user")
 	ErrWithdrawalOrderAlreadyExist = errors.New("withdrawal order already exists")
 	ErrUnauthorizedUser            = errors.New("unauthorized user")
 	ErrNoOrders                    = errors.New("no orders created by login")
