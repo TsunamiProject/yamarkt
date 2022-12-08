@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error while initializing posgtres storage: %s", err)
 	}
+	defer pStorage.CloseConnection()
 
 	userService := service.NewUserService(pStorage)
 	userHandler := handler.NewUserHandler(userService)
