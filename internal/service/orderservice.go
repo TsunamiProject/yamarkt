@@ -1,12 +1,12 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -39,32 +39,36 @@ func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID s
 		log.Printf("create order storage error: %s", err)
 		return err
 	}
-	accOrder := models.AccrualJSON{Order: orderID}
-	accOrderJSON, err := json.Marshal(accOrder)
-	if err != nil {
-		log.Printf("error while marshalling json for accrual service: %s", err)
-		return err
-	}
-	req, err := http.NewRequest("POST", os.AccrualURL+"/api/orders", bytes.NewBuffer(accOrderJSON))
-	if err != nil {
-		return err
-	}
-	client := http.Client{
-		Timeout: 5 * time.Second,
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("error while making request to accrual service: %s", err)
-		return err
-	}
-	defer resp.Body.Close()
+	//accOrder := models.AccrualJSON{Order: orderID}
+	//accOrderJSON, err := json.Marshal(accOrder)
+	//if err != nil {
+	//	log.Printf("error while marshalling json for accrual service: %s", err)
+	//	return err
+	//}
+	//req, err := http.NewRequest("POST", os.AccrualURL+"/api/orders", bytes.NewBuffer(accOrderJSON))
+	//if err != nil {
+	//	return err
+	//}
+	//client := http.Client{
+	//	Timeout: 5 * time.Second,
+	//}
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	log.Printf("error while making request to accrual service: %s", err)
+	//	return err
+	//}
+	//defer resp.Body.Close()
+	//log.Printf("%d", resp.StatusCode)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		err = UpdateOrderStatus(os.storage, os.AccrualURL, login, orderID)
+		err = UpdateOrderStatus(&wg, os.storage, os.AccrualURL, login, orderID)
 		if err != nil {
 			log.Printf("error while updating order status: %s", err)
 		}
 	}()
+	wg.Wait()
 	return err
 }
 
@@ -73,7 +77,8 @@ func (os *OrderService) OrderList(ctx context.Context, login string) (ol []model
 	return orderList, err
 }
 
-func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login string, orderID string) (err error) {
+func UpdateOrderStatus(wg *sync.WaitGroup, orderStorage OrderStorage, accrualURL string, login string, orderID string) (err error) {
+	defer wg.Done()
 	for {
 		req, _ := http.NewRequest("GET",
 			fmt.Sprintf("%s/api/orders/%s", accrualURL, orderID), nil)
@@ -87,12 +92,12 @@ func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login strin
 		resp, err := client.Do(req)
 		if err != nil {
 			log.Printf("error while making request to accrual service: %s", err)
-			return err
+			continue
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
-			log.Printf("recieved status code from accrual service: %v", resp.StatusCode)
-			return err
+			log.Printf("received status code from accrual service: %v", resp.StatusCode)
+			return nil
 		}
 		log.Printf("status code %v received from accrual service", resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
@@ -100,6 +105,7 @@ func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login strin
 			err = json.NewDecoder(resp.Body).Decode(&oi)
 			if err != nil {
 				log.Printf("error while unmarshalling resp from accrual service: %s", err)
+				continue
 			}
 
 			ctx, cancel := context.WithTimeout(req.Context(), config.StorageContextTimeout)
@@ -107,6 +113,7 @@ func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login strin
 			err = orderStorage.UpdateOrder(ctx, login, oi)
 			if err != nil {
 				log.Printf("error while updating order :%s", err)
+				continue
 			}
 			if oi.Status == "INVALID" || oi.Status == "PROCESSED" {
 				log.Printf("order %s has updated status to %s", oi.Order, oi.Status)
