@@ -57,6 +57,7 @@ func (bh BalanceHandler) CreateWithdrawal(w http.ResponseWriter, r *http.Request
 	claims, ok := jwtToken.Get("login")
 	if !ok {
 		errString := fmt.Sprintf("error while getting login from claims in create withdrawal handler: %s", err)
+		log.Printf(errString)
 		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
