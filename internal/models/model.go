@@ -17,9 +17,9 @@ type Withdrawal struct {
 }
 
 type WithdrawalList struct {
-	Order       string    `json:"order"`
-	Sum         int       `json:"sum"`
-	ProcessedAt time.Time `json:"processed_at"`
+	Order       string          `json:"order"`
+	Sum         decimal.Decimal `json:"sum"`
+	ProcessedAt time.Time       `json:"processed_at"`
 }
 
 type CurrentBalance struct {
