@@ -3,10 +3,10 @@ package storage
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
+	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 
 	customErr "github.com/TsunamiProject/yamarkt/internal/customerrs"
@@ -14,11 +14,11 @@ import (
 )
 
 func (ps *PostgresStorage) CreateOrder(ctx context.Context, login string, orderID string) (err error) {
-	_, err = ps.PostgresQL.ExecContext(ctx, createNewUserOrderQuery, orderID)
+	_, err = ps.PostgresQL.ExecContext(ctx, createNewUserOrderQuery, orderID, login)
 	if err != nil {
 		var pgErr *pgconn.PgError
-		dbLogin := ""
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			dbLogin := ""
 			err = ps.PostgresQL.QueryRowContext(ctx, getUserByOrderIDQuery, orderID).Scan(&dbLogin)
 			if err != nil {
 				log.Printf("error while scanning get user by order query result: %s", err)

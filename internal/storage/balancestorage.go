@@ -77,7 +77,7 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 }
 
 func (ps *PostgresStorage) GetWithdrawalList(ctx context.Context, login string) (wl []models.WithdrawalList, err error) {
-	rows, err := ps.PostgresQL.QueryContext(ctx, getUserWithdrawalsQuery)
+	rows, err := ps.PostgresQL.QueryContext(ctx, getUserWithdrawalsQuery, login)
 	if err != nil {
 		log.Printf("err while getting user withdrawals: %s", err)
 		return wl, err

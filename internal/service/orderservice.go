@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/models"
@@ -35,11 +36,13 @@ func NewOrderService(os OrderStorage, accURL string) *OrderService {
 func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID string) (err error) {
 	err = os.storage.CreateOrder(ctx, login, orderID)
 	if err != nil {
+		log.Printf("create order storage error: %s", err)
 		return err
 	}
 	accOrder := models.AccrualJSON{Order: orderID}
 	accOrderJSON, err := json.Marshal(accOrder)
 	if err != nil {
+		log.Printf("error while marshalling json for accrual service: %s", err)
 		return err
 	}
 	req, err := http.NewRequest("POST", os.AccrualURL+"/api/orders", bytes.NewBuffer(accOrderJSON))

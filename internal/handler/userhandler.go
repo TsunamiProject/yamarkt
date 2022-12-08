@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/rs/zerolog/log"
 
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	customErr "github.com/TsunamiProject/yamarkt/internal/customerrs"
