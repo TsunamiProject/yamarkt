@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -55,8 +56,12 @@ func (os *OrderService) CreateOrder(ctx context.Context, login string, orderID s
 	}
 	defer resp.Body.Close()
 
-	//TODO: for while waiting new order status
-
+	go func() {
+		err = UpdateOrderStatus(os.storage, os.AccrualURL, login, orderID)
+		if err != nil {
+			log.Printf("error while updating order status: %s", err)
+		}
+	}()
 	return err
 }
 
@@ -65,12 +70,13 @@ func (os *OrderService) OrderList(ctx context.Context, login string) (ol []model
 	return orderList, err
 }
 
-func (os *OrderService) UpdateOrderStatus(accrualURL string, orderID string, login string) {
+func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login string, orderID string) (err error) {
 	for {
-		req, err := http.NewRequest("GET", accrualURL+"/api/orders"+orderID, nil)
+		req, err := http.NewRequest("GET",
+			fmt.Sprintf("%s/api/orders/%s", accrualURL, orderID), nil)
 		if err != nil {
 			log.Printf("error while constructing request to accrual service :%s", err)
-			return
+			return err
 		}
 		client := http.Client{
 			Timeout: 5 * time.Second,
@@ -78,12 +84,12 @@ func (os *OrderService) UpdateOrderStatus(accrualURL string, orderID string, log
 		resp, err := client.Do(req)
 		if err != nil {
 			log.Printf("error while making request to accrual service: %s", err)
-			return
+			return err
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
 			log.Printf("recieved status code from accrual service: %v", resp.StatusCode)
-			return
+			return err
 		}
 		log.Printf("status code %v recieved from accrual service", resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
@@ -91,26 +97,26 @@ func (os *OrderService) UpdateOrderStatus(accrualURL string, orderID string, log
 			err = json.NewDecoder(resp.Body).Decode(&oi)
 			if err != nil {
 				log.Printf("error while unmarshalling resp from accrual service: %s", err)
-				return
+				return err
 			}
 
 			ctx, cancel := context.WithTimeout(req.Context(), config.StorageContextTimeout)
 			defer cancel()
-			err = os.storage.UpdateOrder(ctx, login, oi)
+			err = orderStorage.UpdateOrder(ctx, login, oi)
 			if err != nil {
 				log.Printf("error while updating order :%s", err)
-				return
+				return err
 			}
 			if oi.Status == "INVALID" || oi.Status == "PROCESSED" {
 				log.Printf("order %s has updated status to %s", oi.Order, oi.Status)
-				return
+				return nil
 			}
 		}
 		if resp.StatusCode == http.StatusTooManyRequests {
 			timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
 			if err != nil {
 				log.Printf("error converting Retry-After to int:%s", err)
-				return
+				return err
 			}
 			time.Sleep(time.Duration(timeout) * 1000 * time.Millisecond)
 		}
