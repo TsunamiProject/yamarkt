@@ -32,5 +32,5 @@ func (bs *BalanceService) GetWithdrawalList(ctx context.Context, login string) (
 
 func (bs *BalanceService) GetCurrentBalance(ctx context.Context, login string) (cb models.CurrentBalance, err error) {
 	cb, err = bs.balanceStorage.GetCurrentBalance(ctx, login)
-	return cb, nil
+	return cb, err
 }
