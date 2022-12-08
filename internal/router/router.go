@@ -17,7 +17,7 @@ func NewRouter(uh *handler.UserHandler, bh *handler.BalanceHandler, oh *handler.
 		r.Use(jwtauth.Verifier(config.TokenAuth))
 		r.Use(jwtauth.Authenticator)
 		router.Post("/api/user/orders", oh.CreateOrder)
-		router.Post("/apu/user/balance/withdrawals", bh.NewWithdrawal)
+		router.Post("/apu/user/balance/withdrawals", bh.CreateWithdrawal)
 		router.Get("/api/user/orders", oh.OrderList)
 		router.Get("/api/user/balance", bh.GetCurrentBalance)
 		router.Get("/api/user/withdrawals", bh.GetWithdrawalList)
