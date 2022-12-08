@@ -54,19 +54,35 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 	}
 
-	_, claims, err := jwtauth.FromContext(r.Context())
+	//_, claims, err := jwtauth.FromContext(r.Context())
+	//if err != nil {
+	//	log.Printf("error while getting claims from create order request context: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//login, ok := claims["login"].(string)
+	//if !ok {
+	//	errStr := fmt.Sprintf("error while getting login from claims in create order handler:%s", err)
+	//	log.Printf(errStr)
+	//	http.Error(w, errStr, http.StatusInternalServerError)
+	//	return
+	//}
+
+	tokenString := jwtauth.TokenFromHeader(r)
+	jwtToken, err := config.TokenAuth.Decode(tokenString)
 	if err != nil {
-		log.Printf("error while getting claims from create order request context: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while decoding token string to jwtToken in create order handler: %s",
+			err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
-	login, ok := claims["login"].(string)
+	claims, ok := jwtToken.Get("login")
 	if !ok {
-		errStr := fmt.Sprintf("error while getting login from claims in create order handler:%s", err)
-		log.Printf(errStr)
-		http.Error(w, errStr, http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while getting login from claims in create order handler: %s", err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
+	login := fmt.Sprintf("%v", claims)
 
 	err = oh.service.CreateOrder(ctx, login, stringBody)
 	if errors.Is(err, customErr.ErrOrderAlreadyExists) {
@@ -83,18 +99,34 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 
-	_, claims, err := jwtauth.FromContext(r.Context())
+	//_, claims, err := jwtauth.FromContext(r.Context())
+	//if err != nil {
+	//	log.Printf("error while getting claims from order list request context: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//login, ok := claims["login"].(string)
+	//if !ok {
+	//	log.Printf("error while getting login from claims in order list handler: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+
+	tokenString := jwtauth.TokenFromHeader(r)
+	jwtToken, err := config.TokenAuth.Decode(tokenString)
 	if err != nil {
-		log.Printf("error while getting claims from order list request context: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while decoding token string to jwtToken in order list handler: %s",
+			err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
-	login, ok := claims["login"].(string)
+	claims, ok := jwtToken.Get("login")
 	if !ok {
-		log.Printf("error while getting login from claims in order list handler: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while getting login from claims in order list handler: %s", err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
+	login := fmt.Sprintf("%v", claims)
 
 	orderList, err := oh.service.OrderList(ctx, login)
 	if errors.Is(err, customErr.ErrNoOrders) {

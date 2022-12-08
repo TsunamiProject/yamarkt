@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -52,18 +53,34 @@ func (bh BalanceHandler) CreateWithdrawal(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 	}
 
-	_, claims, err := jwtauth.FromContext(r.Context())
+	//_, claims, err := jwtauth.FromContext(r.Context())
+	//if err != nil {
+	//	log.Printf("error while getting claims from new withdrawal request context: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//login, ok := claims["login"].(string)
+	//if !ok {
+	//	log.Printf("error while getting login from claims in new withdrawal handler: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+
+	tokenString := jwtauth.TokenFromHeader(r)
+	jwtToken, err := config.TokenAuth.Decode(tokenString)
 	if err != nil {
-		log.Printf("error while getting claims from new withdrawal request context: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while decoding token string to jwtToken in create withdrawal handler: %s",
+			err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
-	login, ok := claims["login"].(string)
+	claims, ok := jwtToken.Get("login")
 	if !ok {
-		log.Printf("error while getting login from claims in new withdrawal handler: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while getting login from claims in create withdrawal handler: %s", err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
+	login := fmt.Sprintf("%v", claims)
 
 	err = bh.service.CreateWithdrawal(ctx, login, withdrawal)
 	if errors.Is(err, customErr.ErrNoFunds) {
@@ -81,18 +98,33 @@ func (bh BalanceHandler) GetWithdrawalList(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 
-	_, claims, err := jwtauth.FromContext(r.Context())
+	//_, claims, err := jwtauth.FromContext(r.Context())
+	//if err != nil {
+	//	log.Printf("error while getting claims from get withdrawal list request context: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//login, ok := claims["login"].(string)
+	//if !ok {
+	//	log.Printf("error while getting login from claims in get withdrawals list handler: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	tokenString := jwtauth.TokenFromHeader(r)
+	jwtToken, err := config.TokenAuth.Decode(tokenString)
 	if err != nil {
-		log.Printf("error while getting claims from get withdrawal list request context: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while decoding token string to jwtToken in get withdrawal list handler: %s",
+			err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
-	login, ok := claims["login"].(string)
+	claims, ok := jwtToken.Get("login")
 	if !ok {
-		log.Printf("error while getting login from claims in get withdrawals list handler: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while getting login from claims in get withdrawal list  handler: %s", err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
+	login := fmt.Sprintf("%v", claims)
 
 	withdrawalList, err := bh.service.GetWithdrawalList(ctx, login)
 	if errors.Is(err, customErr.ErrNoWithdrawals) {
@@ -113,19 +145,35 @@ func (bh BalanceHandler) GetCurrentBalance(w http.ResponseWriter, r *http.Reques
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 
-	_, claims, err := jwtauth.FromContext(r.Context())
+	//_, claims, err := jwtauth.FromContext(r.Context())
+	//if err != nil {
+	//	log.Printf("error while getting claims from get current balance request context: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//login, ok := claims["login"].(string)
+	//if !ok {
+	//	log.Printf("error while getting login from claims in get current balance handler: %s", err)
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+
+	tokenString := jwtauth.TokenFromHeader(r)
+	jwtToken, err := config.TokenAuth.Decode(tokenString)
 	if err != nil {
-		log.Printf("error while getting claims from get current balance request context: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while decoding token string to jwtToken in get current balance handler: %s",
+			err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
-	login, ok := claims["login"].(string)
+	claims, ok := jwtToken.Get("login")
 	if !ok {
-		log.Printf("error while getting login from claims in get current balance handler: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errString := fmt.Sprintf("error while getting login from claims in get current balance handler: %s", err)
+		http.Error(w, errString, http.StatusInternalServerError)
 		return
 	}
-	
+	login := fmt.Sprintf("%v", claims)
+
 	currentBalance, err := bh.service.GetCurrentBalance(ctx, login)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
