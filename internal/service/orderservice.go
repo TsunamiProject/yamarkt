@@ -75,12 +75,12 @@ func (os *OrderService) OrderList(ctx context.Context, login string) (ol []model
 
 func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login string, orderID string) (err error) {
 	for {
-		req, err := http.NewRequest("GET",
+		req, _ := http.NewRequest("GET",
 			fmt.Sprintf("%s/api/orders/%s", accrualURL, orderID), nil)
-		if err != nil {
-			log.Printf("error while constructing request to accrual service :%s", err)
-			return err
-		}
+		//if err != nil {
+		//	log.Printf("error while constructing request to accrual service :%s", err)
+		//	return err
+		//}
 		client := http.Client{
 			Timeout: 5 * time.Second,
 		}
@@ -110,7 +110,7 @@ func UpdateOrderStatus(orderStorage OrderStorage, accrualURL string, login strin
 			}
 			if oi.Status == "INVALID" || oi.Status == "PROCESSED" {
 				log.Printf("order %s has updated status to %s", oi.Order, oi.Status)
-				return
+				return nil
 			}
 		}
 		if resp.StatusCode == http.StatusTooManyRequests {
