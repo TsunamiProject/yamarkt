@@ -115,6 +115,9 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
 		w.WriteHeader(http.StatusOK)
+		var test []byte
+		test, _ = json.Marshal(orderList)
+		log.Printf("marshalled order list: %s", string(test))
 		log.Printf("order list: %s", orderList)
 		err = json.NewEncoder(w).Encode(orderList)
 		if err != nil {

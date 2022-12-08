@@ -138,6 +138,7 @@ func (bh BalanceHandler) GetCurrentBalance(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
 		w.WriteHeader(http.StatusOK)
+		log.Printf("user balance info: %s", currentBalance)
 		err = json.NewEncoder(w).Encode(currentBalance)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
