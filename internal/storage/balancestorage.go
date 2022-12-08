@@ -41,7 +41,9 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 		}
 
 		balanceWithdrawn = balanceWithdrawn.Add(withdrawal.Sum)
+		log.Printf("login: %s: withdrawn balance: %s", login, balanceWithdrawn)
 		balanceCurrent = balanceCurrent.Sub(withdrawal.Sum)
+		log.Printf("login: %s: current balance: %s", login, balanceCurrent)
 
 		_, err = ps.PostgresQL.Exec(updateUserWithdrawalBalanceQuery, login, balanceCurrent, balanceWithdrawn)
 		if err != nil {

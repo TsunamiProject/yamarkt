@@ -100,7 +100,9 @@ func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi mod
 				}
 				return err
 			}
+			log.Printf("login: %s: balance: %s", login, dbBalance)
 			dbBalance = oi.Accrual.Add(dbBalance)
+			log.Printf("login: %s: balance after: %s", login, dbBalance)
 
 			_, err = ps.PostgresQL.Exec(updateUserBalanceQuery, login, dbBalance)
 			if err != nil {

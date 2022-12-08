@@ -95,11 +95,10 @@ func UpdateOrderStatus(wg *sync.WaitGroup, orderStorage OrderStorage, accrualURL
 			continue
 		}
 		defer resp.Body.Close()
+		log.Printf("received status code from accrual service: %v", resp.StatusCode)
 		if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
-			log.Printf("received status code from accrual service: %v", resp.StatusCode)
 			return nil
 		}
-		log.Printf("status code %v received from accrual service", resp.StatusCode)
 		if resp.StatusCode == http.StatusOK {
 			oi := models.OrderInfo{}
 			err = json.NewDecoder(resp.Body).Decode(&oi)
@@ -108,7 +107,7 @@ func UpdateOrderStatus(wg *sync.WaitGroup, orderStorage OrderStorage, accrualURL
 				continue
 			}
 
-			ctx, cancel := context.WithTimeout(req.Context(), config.StorageContextTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
 			log.Printf("accrual:", oi.Accrual)
 			err = orderStorage.UpdateOrder(ctx, login, oi)
