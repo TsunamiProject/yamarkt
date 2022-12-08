@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 
@@ -14,9 +15,12 @@ import (
 func (ps *PostgresStorage) Auth(ctx context.Context, login string, pass string) error {
 	var dbPassword string
 	err := ps.PostgresQL.QueryRowContext(ctx, userPasswordQuery, login).Scan(&dbPassword)
-	if err != nil {
-		log.Printf("error while getting user pass for auth: %s", err)
+	if err == sql.ErrNoRows {
+		log.Printf("error while getting user pass for auth: %s", customErr.ErrUserDoesNotExist)
 		return customErr.ErrUserDoesNotExist
+	} else if err != nil {
+		log.Printf("error while getting user pass for auth: %s", err)
+		return err
 	}
 
 	if dbPassword != pass {
