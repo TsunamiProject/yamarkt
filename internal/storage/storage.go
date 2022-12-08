@@ -22,7 +22,6 @@ func NewPostgresStorage(databaseDsn string) (*PostgresStorage, error) {
 
 	pdb, err := connectToPostgresKernel(databaseDsn)
 	if err != nil {
-		log.Println("??")
 		return nil, err
 	}
 
