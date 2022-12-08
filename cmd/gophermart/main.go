@@ -43,8 +43,8 @@ func main() {
 	wg.Add(1)
 	go gracefulShutdown(ctx, &wg, httpServer)
 	err = httpServer.ListenAndServe()
-	if err != nil {
-		log.Fatalf("error on http server start: %s", err)
+	if err != http.ErrServerClosed {
+		log.Fatalf("listen and serve error: %s", err)
 	}
 	wg.Wait()
 	stop()
