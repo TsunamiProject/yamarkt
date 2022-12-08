@@ -68,9 +68,9 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	err = oh.service.CreateOrder(ctx, login, stringBody)
-	if errors.As(err, &customErr.ErrOrderAlreadyExists) {
+	if errors.Is(err, customErr.ErrOrderAlreadyExists) {
 		w.WriteHeader(http.StatusOK)
-	} else if errors.As(err, &customErr.ErrOrderCreatedByAnotherLogin) {
+	} else if errors.Is(err, customErr.ErrOrderCreatedByAnotherLogin) {
 		w.WriteHeader(http.StatusConflict)
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -96,7 +96,7 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	orderList, err := oh.service.OrderList(ctx, login)
-	if errors.As(err, &customErr.ErrNoOrders) {
+	if errors.Is(err, customErr.ErrNoOrders) {
 		log.Printf("no orders for %s login", login)
 		w.WriteHeader(http.StatusNoContent)
 	} else if err != nil {
