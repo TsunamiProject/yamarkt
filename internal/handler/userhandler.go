@@ -47,7 +47,7 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 	err = uh.service.Auth(ctx, credInstance)
-	if errors.As(err, &customErr.ErrUserDoesNotExist) || errors.As(err, &customErr.ErrWrongPassword) {
+	if errors.Is(err, customErr.ErrUserDoesNotExist) || errors.Is(err, customErr.ErrWrongPassword) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	} else if err != nil {
@@ -85,7 +85,7 @@ func (uh UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
 	defer cancel()
 	err = uh.service.Register(ctx, credInstance)
-	if errors.As(err, &customErr.ErrUserAlreadyExists) {
+	if errors.Is(err, customErr.ErrUserAlreadyExists) {
 		w.WriteHeader(http.StatusConflict)
 		return
 	} else if err != nil {
