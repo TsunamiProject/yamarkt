@@ -54,7 +54,7 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 		}
 	}
 	{
-		_, err = ps.PostgresQL.Exec(updateUserWithdrawalBalanceQuery, withdrawal.Order, login, withdrawal.Sum)
+		_, err = ps.PostgresQL.Exec(createUserWithdrawalQuery, withdrawal.Order, login, withdrawal.Sum)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
