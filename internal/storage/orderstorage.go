@@ -13,11 +13,12 @@ import (
 	"github.com/TsunamiProject/yamarkt/internal/models"
 )
 
-//CreateOrder storage method for placing new user order with user login and orderID
+// CreateOrder storage method for placing new user order with user login and orderID
 func (ps *PostgresStorage) CreateOrder(ctx context.Context, login string, orderID string) (err error) {
 	//sending create new user order query
 	_, err = ps.PostgresQL.ExecContext(ctx, createNewUserOrderQuery, orderID, login)
 	if err != nil {
+		log.Printf("got CreateOrder error: %v", err)
 		var pgErr *pgconn.PgError
 		//if order already exists in database
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -39,7 +40,7 @@ func (ps *PostgresStorage) CreateOrder(ctx context.Context, login string, orderI
 	return err
 }
 
-//OrderList storage method for getting orders from db by user login
+// OrderList storage method for getting orders from db by user login
 func (ps *PostgresStorage) OrderList(ctx context.Context, login string) (ol []models.OrderList, err error) {
 	//sending get user order list query
 	rows, err := ps.PostgresQL.QueryContext(ctx, getUserOrdersListQuery, login)
@@ -74,7 +75,7 @@ func (ps *PostgresStorage) OrderList(ctx context.Context, login string) (ol []mo
 	return ol, err
 }
 
-//UpdateOrder storage method for update order status and accrual info in created order
+// UpdateOrder storage method for update order status and accrual info in created order
 func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi models.OrderInfo) (err error) {
 	//creating transaction instance
 	tx, err := ps.PostgresQL.BeginTx(ctx, nil)
