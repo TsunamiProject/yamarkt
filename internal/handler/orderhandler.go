@@ -99,6 +99,7 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		log.Printf("CreateOrder handler. Error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
+		log.Printf("CreateOrder. Order created by login: %s: Error: %s", login, err)
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
