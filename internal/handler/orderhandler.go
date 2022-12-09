@@ -76,6 +76,7 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		errString := fmt.Sprintf("CreateOrder handler. Error while converting request body to int: %s", err)
 		log.Printf(errString)
 		http.Error(w, errString, http.StatusUnprocessableEntity)
+		return
 	}
 
 	//validating orderID via Luhn algorithm
@@ -84,6 +85,7 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		errString := fmt.Sprintf("CreateOrder handler. Luhn validating error: %s", err)
 		log.Printf(errString)
 		http.Error(w, errString, http.StatusUnprocessableEntity)
+		return
 	}
 
 	//calling CreateOrder service method
