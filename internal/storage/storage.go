@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/rs/zerolog/log"
 
 	"github.com/TsunamiProject/yamarkt/internal/config"
 )
@@ -15,43 +15,56 @@ type PostgresStorage struct {
 	PostgresQL *sql.DB
 }
 
+//NewPostgresStorage method for collecting postgres instance with given databaseDsn
 func NewPostgresStorage(databaseDsn string) (*PostgresStorage, error) {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, config.StorageContextTimeout)
+	//collecting context
+	ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 	defer cancel()
 
-	pdb, err := connectToPostgresKernel(databaseDsn)
+	//connecting to postgres database
+	pdb, err := connectToPostgres(databaseDsn)
 	if err != nil {
 		return nil, err
 	}
 
+	//checking connection with database
+	err = pdb.PingContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("connection with database not alive: %s", err)
+	}
+
+	//creating users table
 	_, err = pdb.Exec(usersTableQuery)
 	if err != nil {
-		log.Printf("error while creating users table: %s", err)
+		log.Printf("Storage. Error while creating users table: %s", err)
 		return nil, err
 	}
 
+	//creating balance table
 	_, err = pdb.Exec(balanceTableQuery)
 	if err != nil {
-		log.Printf("error while creating balance table: %s", err)
+		log.Printf("Storage. Error while creating balance table: %s", err)
 		return nil, err
 	}
 
+	//creating orders table
 	_, err = pdb.Exec(ordersTableQuery)
 	if err != nil {
-		log.Printf("error while creating orders table: %s", err)
+		log.Printf("Storage. Error while creating orders table: %s", err)
 		return nil, err
 	}
 
+	//creating withdrawals table
 	_, err = pdb.Exec(withdrawalsTableQuery)
 	if err != nil {
-		log.Printf("error while creating withdrawals table: %s", err)
+		log.Printf("Storage. Error while creating withdrawals table: %s", err)
 		return nil, err
 	}
 	return &PostgresStorage{PostgresQL: pdb}, nil
 }
 
-func connectToPostgresKernel(databaseDsn string) (*sql.DB, error) {
+//connectToPostgres makes connection with postgres database via pgx driver
+func connectToPostgres(databaseDsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", databaseDsn)
 	if err != nil {
 		return nil, fmt.Errorf("connection error to Postgres kernel with creds: %s. %s", databaseDsn, err)
@@ -59,6 +72,7 @@ func connectToPostgresKernel(databaseDsn string) (*sql.DB, error) {
 	return db, nil
 }
 
+//CloseConnection closes connection with postgres database
 func (ps *PostgresStorage) CloseConnection() error {
 	err := ps.PostgresQL.Close()
 	if err != nil {
