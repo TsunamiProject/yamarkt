@@ -156,6 +156,7 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusOK)
 		log.Printf("OrderList handler. Login: %s", login)
+		log.Printf("OrderList. Output: %s", orderList)
 		json.NewEncoder(w).Encode(orderList)
 	}
 }
