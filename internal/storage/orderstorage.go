@@ -18,7 +18,7 @@ func (ps *PostgresStorage) CreateOrder(ctx context.Context, login string, orderI
 	//sending create new user order query
 	_, err = ps.PostgresQL.ExecContext(ctx, createNewUserOrderQuery, orderID, login)
 	if err != nil {
-		log.Printf("got CreateOrder error: %v", err)
+		log.Printf("got CreateOrder error: %v, for login $s with number %s", err, login, orderID)
 		var pgErr *pgconn.PgError
 		//if order already exists in database
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
