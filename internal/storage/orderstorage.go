@@ -34,6 +34,7 @@ func (ps *PostgresStorage) CreateOrder(ctx context.Context, login string, orderI
 			}
 			return customErr.ErrOrderAlreadyExists
 		}
+		return err
 	}
 	return err
 }
