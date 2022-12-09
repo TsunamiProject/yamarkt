@@ -30,7 +30,6 @@ func (ps *PostgresStorage) CreateOrder(ctx context.Context, login string, orderI
 			}
 
 			if dbLogin != login {
-				log.Printf("%s", customErr.ErrOrderCreatedByAnotherLogin)
 				return customErr.ErrOrderCreatedByAnotherLogin
 			}
 			return customErr.ErrOrderAlreadyExists
