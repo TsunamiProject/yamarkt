@@ -39,6 +39,9 @@ func NewUserHandler(userHandler UserServiceProvider) *UserHandler {
 //401 - on wrong credentials,
 //500 - on internal server error
 func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
+	//creating context from request context
+	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
+	defer cancel()
 	credInstance := models.Credentials{}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -53,10 +56,6 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid credentials JSON received", http.StatusBadRequest)
 		return
 	}
-
-	//creating context from request context
-	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
-	defer cancel()
 	//calling Auth service method
 	err = uh.service.Auth(ctx, credInstance)
 	if errors.Is(err, customErr.ErrUserDoesNotExist) || errors.Is(err, customErr.ErrWrongPassword) {

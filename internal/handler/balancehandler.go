@@ -66,7 +66,7 @@ func (bh BalanceHandler) CreateWithdrawal(w http.ResponseWriter, r *http.Request
 			"Error while decoding token string to jwtToken in create withdrawal handler: %s",
 			err)
 		log.Printf(errString)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	//getting login from jwtToken
@@ -74,7 +74,7 @@ func (bh BalanceHandler) CreateWithdrawal(w http.ResponseWriter, r *http.Request
 	if !ok {
 		errString := fmt.Sprintf("CreateWithdrawal handler. Error while getting login from claims: %s", err)
 		log.Printf(errString)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	login := fmt.Sprintf("%v", claims)

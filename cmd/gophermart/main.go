@@ -8,12 +8,21 @@ import (
 	"os/signal"
 	"sync"
 
+	"github.com/rs/zerolog"
+	"github.com/shopspring/decimal"
+
 	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/handler"
 	appRouter "github.com/TsunamiProject/yamarkt/internal/router"
 	"github.com/TsunamiProject/yamarkt/internal/service"
 	"github.com/TsunamiProject/yamarkt/internal/storage"
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	decimal.MarshalJSONWithoutQuotes = true
+	decimal.DivisionPrecision = 2
+}
 
 func main() {
 	//Creating config instance

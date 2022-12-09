@@ -13,7 +13,7 @@ import (
 func NewRouter(uh *handler.UserHandler, bh *handler.BalanceHandler, oh *handler.OrderHandler) chi.Router {
 	router := chi.NewRouter()
 	router.Use(chiMiddleware.Recoverer)
-	router.Use(chiMiddleware.Logger)
+	//router.Use(chiMiddleware.Logger)
 	router.Use(middleware.GzipRespWriter, middleware.GzipReqReader)
 
 	router.Group(func(r chi.Router) {

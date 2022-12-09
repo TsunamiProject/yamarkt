@@ -51,14 +51,14 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		errString := fmt.Sprintf("CreateOrder handler. Error while decoding token string to jwtToken: %s",
 			err)
 		log.Printf(errString)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	//getting login from jwtToken
 	claims, ok := jwtToken.Get("login")
 	if !ok {
 		errString := fmt.Sprintf("CreateOrder handler. Error while getting login from claims: %s", err)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	login := fmt.Sprintf("%v", claims)
@@ -130,7 +130,7 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 			"Error while decoding token string to jwtToken: %s",
 			err)
 		log.Printf(errString)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	//getting login from jwtToken
@@ -155,6 +155,7 @@ func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
 		w.WriteHeader(http.StatusOK)
+		log.Printf("OrderList handler. Login: %s", login)
 		json.NewEncoder(w).Encode(orderList)
 	}
 }

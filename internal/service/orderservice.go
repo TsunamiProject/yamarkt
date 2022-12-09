@@ -16,7 +16,7 @@ import (
 )
 
 type OrderStorage interface {
-	CreateOrder(ctx context.Context, login string, orderID string) error
+	CreateOrder(ctx context.Context, login string, orderID string) (err error)
 	OrderList(ctx context.Context, login string) (ol []models.OrderList, err error)
 	UpdateOrder(ctx context.Context, login string, oi models.OrderInfo) (err error)
 }
