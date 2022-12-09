@@ -32,13 +32,13 @@ func NewOrderHandler(osp OrderServiceProvider) *OrderHandler {
 }
 
 // CreateOrder takes on enter user login from Authentication header and orderID from request payload
-//and returns status codes: 200 - on order already exist,
-//202 - on order accepted to process,
-//400 - on bad request,
-//401 - on unauthorized user,
-//409 - on order already exist,
-//422 - on wrong orderID format,
-//500 - on internal server error
+// and returns status codes: 200 - on order already exist,
+// 202 - on order accepted to process,
+// 400 - on bad request,
+// 401 - on unauthorized user,
+// 409 - on order already exist,
+// 422 - on wrong orderID format,
+// 500 - on internal server error
 func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	//creating context from request context
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
@@ -84,6 +84,7 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		errString := fmt.Sprintf("CreateOrder handler. Luhn validating error: %s", err)
 		log.Printf(errString)
 		http.Error(w, errString, http.StatusUnprocessableEntity)
+		return
 	}
 
 	//calling CreateOrder service method
@@ -105,19 +106,21 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 // OrderList takes on enter user login from Authentication header
-//and returns:
-//status code 200: user withdrawals list: json [
-//      {
-//          "number": "9278923470",
-//          "status": "PROCESSED",
-//          "accrual": 500,
-//          "uploaded_at": "2020-12-10T15:15:45+03:00"
-//      },
-//  ...
-//  ]
-//204: on no orders from user,
-//401 - on unauthorized user,
-//500 - on internal server error
+// and returns:
+// status code 200: user withdrawals list: json [
+//
+//	    {
+//	        "number": "9278923470",
+//	        "status": "PROCESSED",
+//	        "accrual": 500,
+//	        "uploaded_at": "2020-12-10T15:15:45+03:00"
+//	    },
+//	...
+//	]
+//
+// 204: on no orders from user,
+// 401 - on unauthorized user,
+// 500 - on internal server error
 func (oh OrderHandler) OrderList(w http.ResponseWriter, r *http.Request) {
 	//creating context from request context
 	ctx, cancel := context.WithTimeout(r.Context(), config.StorageContextTimeout)
