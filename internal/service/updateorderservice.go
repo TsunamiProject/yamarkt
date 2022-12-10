@@ -44,9 +44,13 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 			wg.Done()
 			return
 		default:
+			time.Sleep(2 * time.Second)
 			unprocessedOrderList, err := uo.GetUnprocessedOrdersList(ctx)
 			if err != nil {
 				log.Printf("UpdateOrderStatus. Error while getting unprocessed order list: %s", err)
+				continue
+			}
+			if len(unprocessedOrderList) < 1 {
 				continue
 			}
 			for order := range unprocessedOrderList {
@@ -102,6 +106,6 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 
 //GetUnprocessedOrdersList service for getting unprocessed orders from db
 func (uo *UpdateOrderService) GetUnprocessedOrdersList(ctx context.Context) (ol []models.UnprocessedOrdersList, err error) {
-	ol, err = uo.GetUnprocessedOrdersList(ctx)
+	ol, err = uo.storage.GetUnprocessedOrdersList(ctx)
 	return ol, err
 }
