@@ -55,5 +55,5 @@ const (
 	updateUserWithdrawalBalanceQuery = `UPDATE balance SET current_balance = $2, total_withdrawn =$3 WHERE login = $1`
 	createUserWithdrawalQuery        = `INSERT INTO withdrawals (new_order, login, "sum") VALUES ($1, $2, $3)`
 
-	getUnprocessedOrdersQuery = `SELECT order_num, login FROM orders WHERE status != &1 and status !=&2 ORDER BY change_time`
+	getUnprocessedOrdersQuery = `SELECT order_num, login FROM orders WHERE status != $1 and status !=$2 ORDER BY change_time`
 )
