@@ -55,7 +55,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 			for order := range unprocessedOrderList {
 				//collecting request to accrual system
 				req, _ := http.NewRequest("GET",
-					fmt.Sprintf("%s/api/orders/%s", uo.AccrualURL, unprocessedOrderList[order].Login), nil)
+					fmt.Sprintf("%s/api/orders/%s", uo.AccrualURL, unprocessedOrderList[order].Number), nil)
 				//making request to accrual system
 				resp, err := client.Do(req)
 				if err != nil {
