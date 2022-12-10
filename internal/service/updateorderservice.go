@@ -50,6 +50,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 				log.Printf("UpdateOrderStatus. Error while getting unprocessed order list: %s", err)
 				continue
 			}
+			log.Printf("UpdateOrderStatus service. Unprocessed order list: %s", unprocessedOrderList)
 			if len(unprocessedOrderList) < 1 {
 				continue
 			}
@@ -75,6 +76,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 						log.Printf("UpdateOrderStatus service. Error while unmarshalling resp from accrual service: %s", err)
 						continue
 					}
+					log.Printf("UpdateOrderStatus service. Received order info: %s", oi)
 
 					//creating context from parent context
 					updateContext, cancel := context.WithTimeout(ctx, config.StorageContextTimeout)
