@@ -12,4 +12,5 @@ var (
 	ErrNoFunds                     = errors.New("no funds on login balance")
 	ErrNoWithdrawals               = errors.New("no withdrawals by login")
 	ErrWrongPassword               = errors.New("wrong password received")
+	ErrNoUnprocessedOrders         = errors.New("no unprocessed orders")
 )

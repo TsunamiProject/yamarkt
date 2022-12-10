@@ -20,6 +20,10 @@ const (
 	StorageContextTimeout = time.Second
 	TokenSignKey          = "g1o2p3h4e5r"
 	TokenTTL              = 20 * time.Minute
+	RegisteredOrderStatus = "REGISTERED"
+	InvalidOrderStatus    = "INVALID"
+	ProcessingOrderStatus = "PROCESSING"
+	ProcessedOrderStatus  = "PROCESSED"
 )
 
 var TokenAuth *jwtauth.JWTAuth = jwtauth.New(string(jwa.HS256), []byte(TokenSignKey), nil)

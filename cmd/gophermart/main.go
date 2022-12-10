@@ -45,13 +45,16 @@ func main() {
 	orderService := service.NewOrderService(pStorage, cfg.AccrualURL)
 	orderHandler := handler.NewOrderHandler(orderService)
 
+	updateOrderService := service.NewUpdateOrderService(pStorage, cfg.AccrualURL)
+
 	router := appRouter.NewRouter(userHandler, balanceHandler, orderHandler)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	var wg sync.WaitGroup
 	httpServer := &http.Server{Addr: cfg.ServerAddress, Handler: router}
-	wg.Add(1)
+	wg.Add(2)
 	go gracefulShutdown(ctx, &wg, httpServer)
+	go updateOrderService.UpdateOrderStatus(ctx, &wg)
 	err = httpServer.ListenAndServe()
 	if err != http.ErrServerClosed {
 		log.Fatalf("listen and serve error: %s", err)

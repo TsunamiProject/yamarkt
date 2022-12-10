@@ -43,3 +43,8 @@ type OrderList struct {
 type AccrualJSON struct {
 	Order string `json:"order"`
 }
+
+type UnprocessedOrdersList struct {
+	Number string `json:"number"`
+	Login  string `json:"login"`
+}

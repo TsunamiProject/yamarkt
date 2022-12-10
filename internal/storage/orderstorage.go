@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 
+	"github.com/TsunamiProject/yamarkt/internal/config"
 	customErr "github.com/TsunamiProject/yamarkt/internal/customerrs"
 	"github.com/TsunamiProject/yamarkt/internal/models"
 )
@@ -44,7 +45,7 @@ func (ps *PostgresStorage) OrderList(ctx context.Context, login string) (ol []mo
 	//sending get user order list query
 	rows, err := ps.PostgresQL.QueryContext(ctx, getUserOrdersListQuery, login)
 	if err != nil {
-		log.Printf("error on get user orders list query: %s", err)
+		log.Printf("OrderList. Error on get user orders list query: %s", err)
 		return ol, err
 	}
 	defer rows.Close()
@@ -131,4 +132,41 @@ func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi mod
 		log.Printf("UpdateOrder. Error while committing tx on update user order")
 	}
 	return err
+}
+
+//TODO: GetUnprocessedOrders storage method
+
+func (ps *PostgresStorage) GetUnprocessedOrdersList(ctx context.Context) (ol []models.UnprocessedOrdersList, err error) {
+	//sending get user order list query
+	rows, err := ps.PostgresQL.QueryContext(ctx, getUnprocessedOrdersQuery, config.InvalidOrderStatus,
+		config.ProcessedOrderStatus)
+	if err != nil {
+		log.Printf("GetUnprocessedOrdersList. Error on get unprocessed orders list query: %s", err)
+		return ol, err
+	}
+	defer rows.Close()
+	unprocessedOrderList := models.UnprocessedOrdersList{}
+
+	//scanning rows
+	for rows.Next() {
+		err = rows.Scan(&unprocessedOrderList.Number, &unprocessedOrderList.Login)
+		if err != nil {
+			log.Printf("GetUnprocessedOrdersList. Error while scanning row: %s", err)
+			return ol, err
+		}
+		//appending order to orderList
+		ol = append(ol, unprocessedOrderList)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Printf("GetUnprocessedOrdersList. Error on iteration scan in get unprocessed orders list query: %s", err)
+		return ol, err
+	}
+
+	if len(ol) == 0 {
+		log.Printf("GetUnprocessedOrdersList. No unprocessed orders")
+		err = customErr.ErrNoUnprocessedOrders
+	}
+	return ol, err
 }
