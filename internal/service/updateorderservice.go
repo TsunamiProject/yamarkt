@@ -51,9 +51,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 				continue
 			}
 			log.Printf("UpdateOrderStatus service. Unprocessed order list: %s", unprocessedOrderList)
-			if len(unprocessedOrderList) < 1 {
-				continue
-			}
+
 			for order := range unprocessedOrderList {
 				//collecting request to accrual system
 				req, _ := http.NewRequest("GET",
@@ -65,6 +63,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					continue
 				}
 				defer resp.Body.Close()
+				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %s", resp.StatusCode)
 				if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
 					continue
 				}
