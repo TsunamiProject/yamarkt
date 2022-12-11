@@ -44,7 +44,8 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 			wg.Done()
 			return
 		default:
-			time.Sleep(2 * time.Second)
+			time.Sleep(config.GetUnprocessedOrdersFrequency)
+			//getting unprocessed orders from storage
 			unprocessedOrderList, err := uo.GetUnprocessedOrdersList(ctx)
 			if err != nil {
 				log.Printf("UpdateOrderStatus. Error while getting unprocessed order list: %s", err)
@@ -55,7 +56,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 			for order := range unprocessedOrderList {
 				//collecting request to accrual system
 				req, _ := http.NewRequest("GET",
-					fmt.Sprintf("%s/api/orders/%s", uo.AccrualURL, unprocessedOrderList[order].Number), nil)
+					fmt.Sprintf("%s%s%s", uo.AccrualURL, config.AccrualOrderStatusURN, unprocessedOrderList[order].Number), nil)
 				//making request to accrual system
 				resp, err := client.Do(req)
 				if err != nil {
@@ -86,7 +87,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 						log.Printf("UpdateOrderStatus service. Error while updating order :%s", err)
 						continue
 					}
-					if oi.Status == "INVALID" || oi.Status == "PROCESSED" {
+					if oi.Status == config.InvalidOrderStatus || oi.Status == config.ProcessedOrderStatus {
 						log.Printf("UpdateOrderStatus service. Order %s has updated status to %s", oi.Order, oi.Status)
 						continue
 					}

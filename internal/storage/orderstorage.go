@@ -134,10 +134,9 @@ func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi mod
 	return err
 }
 
-//TODO: GetUnprocessedOrders storage method
-
+//GetUnprocessedOrdersList storage method for getting unprocessed orders from db
 func (ps *PostgresStorage) GetUnprocessedOrdersList(ctx context.Context) (ol []models.UnprocessedOrdersList, err error) {
-	//sending get user order list query
+	//sending get unprocessed orders list query
 	rows, err := ps.PostgresQL.QueryContext(ctx, getUnprocessedOrdersQuery, config.InvalidOrderStatus,
 		config.ProcessedOrderStatus)
 	if err != nil {
