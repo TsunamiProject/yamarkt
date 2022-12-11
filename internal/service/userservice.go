@@ -25,7 +25,7 @@ func NewUserService(userStorage UserStorage) *UserService {
 func (us *UserService) Register(ctx context.Context, cred models.Credentials) (err error) {
 	encodedPass, err := Encode(cred.Pass)
 	if err != nil {
-		log.Printf("encoding password error: %s", err)
+		log.Printf("Register service. Encoding password error: %s", err)
 		return err
 	}
 	err = us.userStorage.Register(ctx, cred.Login, encodedPass)
@@ -35,7 +35,7 @@ func (us *UserService) Register(ctx context.Context, cred models.Credentials) (e
 func (us *UserService) Auth(ctx context.Context, cred models.Credentials) (err error) {
 	encodedPass, err := Encode(cred.Pass)
 	if err != nil {
-		log.Printf("encoding password error: %s", err)
+		log.Printf("Auth service. Encoding password error: %s", err)
 		return err
 	}
 	err = us.userStorage.Auth(ctx, cred.Login, encodedPass)
