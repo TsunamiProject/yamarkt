@@ -10,11 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/handler"
 	"github.com/TsunamiProject/yamarkt/internal/handler/servicemock"
 	"github.com/TsunamiProject/yamarkt/internal/models"
@@ -57,12 +56,12 @@ func TestHandler_GetCurrentBalance(t *testing.T) {
 	for _, tCase := range tests {
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, nil)
-			jwtToken := jwt.New()
-			jwtToken.Set(`login`, tCase.inputLogin)
-			requestContext := jwtauth.NewContext(request.Context(), jwtToken, nil)
-			request = request.WithContext(requestContext)
+			claims := map[string]interface{}{
+				"login": tCase.inputLogin,
+			}
+			_, jwtToken, _ := config.TokenAuth.Encode(claims)
+			request.Header.Set("Authorization", "Bearer "+jwtToken)
 			w := httptest.NewRecorder()
-			w.Header().Set("Authorization", "Bearer "+tCase.inputLogin)
 			bh.GetCurrentBalance(w, request)
 			assert.Equal(t, tCase.expectedStatusCode, w.Code)
 			assert.Equal(t, tCase.expectedHeaderContent, w.Header().Get(tCase.expectedHeader))
@@ -122,10 +121,11 @@ func TestHandler_CreateWithdrawal(t *testing.T) {
 	for _, tCase := range tests {
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, bytes.NewBufferString(tCase.inputBody))
-			jwtToken := jwt.New()
-			jwtToken.Set(`login`, tCase.inputLogin)
-			requestContext := jwtauth.NewContext(request.Context(), jwtToken, nil)
-			request = request.WithContext(requestContext)
+			claims := map[string]interface{}{
+				"login": tCase.inputLogin,
+			}
+			_, jwtToken, _ := config.TokenAuth.Encode(claims)
+			request.Header.Set("Authorization", "Bearer "+jwtToken)
 			w := httptest.NewRecorder()
 			w.Header().Set("Authorization", "Bearer "+tCase.inputLogin)
 			bh.CreateWithdrawal(w, request)
@@ -148,7 +148,7 @@ func TestHandler_GetWithdrawalList(t *testing.T) {
 		expectedHeaderContent1 string
 	}{
 		{
-			name:                   "#1. GetWithdrawalWithdrawal handler. Positive",
+			name:                   "#1. GetWithdrawal handler. Positive",
 			inputMethod:            http.MethodGet,
 			inputEndpoint:          "/api/user/withdrawals",
 			inputLogin:             "test",
@@ -169,7 +169,7 @@ func TestHandler_GetWithdrawalList(t *testing.T) {
 			},
 		},
 		{
-			name:                   "#2. GetWithdrawalWithdrawal handler. Negative: no content",
+			name:                   "#2. GetWithdrawal handler. Negative: no content",
 			inputMethod:            http.MethodGet,
 			inputEndpoint:          "/api/user/withdrawals",
 			inputLogin:             "no-records",
@@ -178,7 +178,7 @@ func TestHandler_GetWithdrawalList(t *testing.T) {
 			expectedHeaderContent1: "application/json",
 		},
 		{
-			name:                   "#3. GetWithdrawalWithdrawal handler. Negative",
+			name:                   "#3. GetWithdrawal handler. Negative",
 			inputMethod:            http.MethodGet,
 			inputEndpoint:          "/api/user/withdrawals",
 			inputLogin:             "wrong",
@@ -194,10 +194,11 @@ func TestHandler_GetWithdrawalList(t *testing.T) {
 	for _, tCase := range tests {
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, nil)
-			jwtToken := jwt.New()
-			jwtToken.Set(`login`, tCase.inputLogin)
-			requestContext := jwtauth.NewContext(request.Context(), jwtToken, nil)
-			request = request.WithContext(requestContext)
+			claims := map[string]interface{}{
+				"login": tCase.inputLogin,
+			}
+			_, jwtToken, _ := config.TokenAuth.Encode(claims)
+			request.Header.Set("Authorization", "Bearer "+jwtToken)
 			w := httptest.NewRecorder()
 			w.Header().Set("Authorization", "Bearer "+tCase.inputLogin)
 			bh.GetWithdrawalList(w, request)

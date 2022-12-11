@@ -8,10 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/TsunamiProject/yamarkt/internal/config"
 	"github.com/TsunamiProject/yamarkt/internal/handler"
 	"github.com/TsunamiProject/yamarkt/internal/handler/servicemock"
 )
@@ -80,10 +79,11 @@ func TestHandler_CreateOrder(t *testing.T) {
 	for _, tCase := range tests {
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, bytes.NewBufferString(tCase.inputBody))
-			jwtToken := jwt.New()
-			jwtToken.Set(`login`, tCase.inputLogin)
-			requestContext := jwtauth.NewContext(request.Context(), jwtToken, nil)
-			request = request.WithContext(requestContext)
+			claims := map[string]interface{}{
+				"login": tCase.inputLogin,
+			}
+			_, jwtToken, _ := config.TokenAuth.Encode(claims)
+			request.Header.Set("Authorization", "Bearer "+jwtToken)
 			w := httptest.NewRecorder()
 			w.Header().Set("Authorization", "Bearer "+tCase.inputLogin)
 			oh.CreateOrder(w, request)
@@ -128,10 +128,11 @@ func TestHandler_OrderList(t *testing.T) {
 	for _, tCase := range tests {
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, nil)
-			jwtToken := jwt.New()
-			jwtToken.Set(`login`, tCase.inputLogin)
-			requestContext := jwtauth.NewContext(request.Context(), jwtToken, nil)
-			request = request.WithContext(requestContext)
+			claims := map[string]interface{}{
+				"login": tCase.inputLogin,
+			}
+			_, jwtToken, _ := config.TokenAuth.Encode(claims)
+			request.Header.Set("Authorization", "Bearer "+jwtToken)
 			w := httptest.NewRecorder()
 			w.Header().Set("Authorization", "Bearer "+tCase.inputLogin)
 			oh.OrderList(w, request)
