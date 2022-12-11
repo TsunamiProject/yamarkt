@@ -69,7 +69,7 @@ func (oh OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 	}
 
-	stringBody := fmt.Sprintf("%s", body)
+	stringBody := string(body)
 	//getting orderID from response body string
 	_, err = strconv.ParseInt(stringBody, 10, 0)
 	if err != nil {

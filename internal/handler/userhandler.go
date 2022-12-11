@@ -59,7 +59,7 @@ func (uh UserHandler) Auth(w http.ResponseWriter, r *http.Request) {
 	//calling Auth service method
 	err = uh.service.Auth(ctx, credInstance)
 	if errors.Is(err, customErr.ErrUserDoesNotExist) || errors.Is(err, customErr.ErrWrongPassword) {
-		log.Printf("Auth handler. Login: %s: Wrong credentials")
+		log.Printf("Auth handler. Login: %s: Wrong credentials", credInstance.Login)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	} else if err != nil {

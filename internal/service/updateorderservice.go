@@ -63,7 +63,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					continue
 				}
 				defer resp.Body.Close()
-				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %s", resp.StatusCode)
+				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %d", resp.StatusCode)
 				if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
 					continue
 				}

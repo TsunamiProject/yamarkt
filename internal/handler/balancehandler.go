@@ -83,13 +83,13 @@ func (bh BalanceHandler) CreateWithdrawal(w http.ResponseWriter, r *http.Request
 	err = bh.service.CreateWithdrawal(ctx, login, withdrawal)
 	switch {
 	case err != nil && errors.Is(err, customErr.ErrNoFunds):
-		log.Printf("CreateWithdrawal handler. Login: %s: No funds")
+		log.Printf("CreateWithdrawal handler. Login: %s: No funds", login)
 		w.WriteHeader(http.StatusPaymentRequired)
 	case err != nil && errors.Is(err, customErr.ErrWithdrawalOrderAlreadyExist):
-		log.Printf("CreateWithdrawal handler. Login: %s: Withdrawal already exist")
+		log.Printf("CreateWithdrawal handler. Login: %s: Withdrawal already exist", login)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	case err != nil:
-		log.Printf("CreateWithdrawal handler. Login: %s: Error: %s", err)
+		log.Printf("CreateWithdrawal handler. Login: %s: Error: %s", login, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
 		w.WriteHeader(http.StatusOK)
@@ -132,6 +132,7 @@ func (bh BalanceHandler) GetWithdrawalList(w http.ResponseWriter, r *http.Reques
 	}
 	login := fmt.Sprintf("%v", claims)
 	//calling GetWithdrawalList service method
+	w.Header().Set("Content-Type", "application/json")
 	withdrawalList, err := bh.service.GetWithdrawalList(ctx, login)
 	switch {
 	case err != nil && errors.Is(err, customErr.ErrNoWithdrawals):
@@ -141,7 +142,6 @@ func (bh BalanceHandler) GetWithdrawalList(w http.ResponseWriter, r *http.Reques
 		log.Printf("GetWithdrawalList handler. Login: %s : Error: %s", login, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	default:
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(withdrawalList)
 	}
@@ -163,7 +163,7 @@ func (bh BalanceHandler) GetCurrentBalance(w http.ResponseWriter, r *http.Reques
 		errString := fmt.Sprintf("GetCurrentBalance handler. Error while decoding token string to jwtToken: %s",
 			err)
 		log.Printf(errString)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	//getting login from jwtToken
@@ -171,7 +171,7 @@ func (bh BalanceHandler) GetCurrentBalance(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		errString := fmt.Sprintf("GetCurrentBalance handler. Error while getting login from claims: %s", err)
 		log.Printf(errString)
-		http.Error(w, errString, http.StatusInternalServerError)
+		http.Error(w, errString, http.StatusUnauthorized)
 		return
 	}
 	login := fmt.Sprintf("%v", claims)
