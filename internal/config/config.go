@@ -14,16 +14,18 @@ import (
 )
 
 const (
-	defaultServerAddress  = "localhost:8080"
-	defaultAccuralURL     = "http://localhost:8080"
-	defaultDatabaseDSN    = "user=pqgotest dbname=pqgotest sslmode=verify-full"
-	StorageContextTimeout = time.Second
-	TokenSignKey          = "g1o2p3h4e5r"
-	TokenTTL              = 20 * time.Minute
-	RegisteredOrderStatus = "REGISTERED"
-	InvalidOrderStatus    = "INVALID"
-	ProcessingOrderStatus = "PROCESSING"
-	ProcessedOrderStatus  = "PROCESSED"
+	defaultServerAddress          = "localhost:8080"
+	defaultAccuralURL             = "http://localhost:8080"
+	defaultDatabaseDSN            = "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	StorageContextTimeout         = time.Second
+	TokenSignKey                  = "g1o2p3h4e5r"
+	TokenTTL                      = 20 * time.Minute
+	RegisteredOrderStatus         = "REGISTERED"
+	InvalidOrderStatus            = "INVALID"
+	ProcessingOrderStatus         = "PROCESSING"
+	ProcessedOrderStatus          = "PROCESSED"
+	AccrualOrderStatusURN         = "/api/orders/"
+	GetUnprocessedOrdersFrequency = time.Second
 )
 
 var TokenAuth *jwtauth.JWTAuth = jwtauth.New(string(jwa.HS256), []byte(TokenSignKey), nil)
