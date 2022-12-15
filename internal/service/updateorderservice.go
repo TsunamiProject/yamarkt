@@ -57,6 +57,7 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					fmt.Sprintf("%s%s%s", uo.AccrualURL, config.AccrualOrderStatusURN, unprocessedOrderList[order].Number), nil)
 				if err != nil {
 					log.Printf("UpdateOrderStatus service. Error while collecting http request: %s", err)
+					continue
 				}
 				//making request to accrual system
 				resp, err := client.Do(req)
