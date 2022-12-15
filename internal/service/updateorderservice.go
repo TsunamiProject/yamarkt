@@ -64,10 +64,6 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					log.Printf("UpdateOrderStatus service. Error while making request to accrual system: %s", err)
 					continue
 				}
-				err = resp.Body.Close()
-				if err != nil {
-					log.Printf("UpdateOrderStatus service. Error while closing response body: %s", err)
-				}
 				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %d", resp.StatusCode)
 				if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
 					continue
@@ -95,6 +91,10 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 						log.Printf("UpdateOrderStatus service. Order %s has updated status to %s", oi.Order, oi.Status)
 						continue
 					}
+				}
+				err = resp.Body.Close()
+				if err != nil {
+					log.Printf("UpdateOrderStatus service. Error while closing response body: %s", err)
 				}
 				if resp.StatusCode == http.StatusTooManyRequests {
 					//parsing Retry-After header to timeout variable for making sleep on Retry-After header value
