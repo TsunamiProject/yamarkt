@@ -26,6 +26,7 @@ const (
 	ProcessedOrderStatus          = "PROCESSED"
 	AccrualOrderStatusURN         = "/api/orders/"
 	GetUnprocessedOrdersFrequency = time.Second
+	RetryAfterErrorDefaultTimeout = 30 * time.Second
 )
 
 var TokenAuth *jwtauth.JWTAuth = jwtauth.New(string(jwa.HS256), []byte(TokenSignKey), nil)
