@@ -51,19 +51,23 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 				log.Printf("UpdateOrderStatus. Error while getting unprocessed order list: %s", err)
 				continue
 			}
-			log.Printf("UpdateOrderStatus service. Unprocessed order list: %s", unprocessedOrderList)
-
 			for order := range unprocessedOrderList {
 				//collecting request to accrual system
-				req, _ := http.NewRequest("GET",
+				req, err := http.NewRequestWithContext(ctx, http.MethodGet,
 					fmt.Sprintf("%s%s%s", uo.AccrualURL, config.AccrualOrderStatusURN, unprocessedOrderList[order].Number), nil)
+				if err != nil {
+					log.Printf("UpdateOrderStatus service. Error while collecting http request: %s", err)
+				}
 				//making request to accrual system
 				resp, err := client.Do(req)
 				if err != nil {
 					log.Printf("UpdateOrderStatus service. Error while making request to accrual system: %s", err)
 					continue
 				}
-				defer resp.Body.Close()
+				err = resp.Body.Close()
+				if err != nil {
+					log.Printf("UpdateOrderStatus service. Error while closing response body: %s", err)
+				}
 				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %d", resp.StatusCode)
 				if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
 					continue
@@ -76,17 +80,17 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 						log.Printf("UpdateOrderStatus service. Error while unmarshalling resp from accrual service: %s", err)
 						continue
 					}
-					log.Printf("UpdateOrderStatus service. Received order info: %s", oi)
-
+					//log.Printf("UpdateOrderStatus service. Received order info: %s", oi)
 					//creating context from parent context
 					updateContext, cancel := context.WithTimeout(ctx, config.StorageContextTimeout)
-					defer cancel()
 					//calling UpdateOrder storage method
 					err = uo.storage.UpdateOrder(updateContext, unprocessedOrderList[order].Login, oi)
 					if err != nil {
+						cancel()
 						log.Printf("UpdateOrderStatus service. Error while updating order :%s", err)
 						continue
 					}
+					cancel()
 					if oi.Status == config.InvalidOrderStatus || oi.Status == config.ProcessedOrderStatus {
 						log.Printf("UpdateOrderStatus service. Order %s has updated status to %s", oi.Order, oi.Status)
 						continue
@@ -97,9 +101,10 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
 					if err != nil {
 						log.Printf("UpdateOrderStatus service. Error while converting Retry-After header to int: %s", err)
-						continue
+						time.Sleep(config.RetryAfterErrorDefaultTimeout)
+					} else {
+						time.Sleep(time.Duration(timeout) * time.Second)
 					}
-					time.Sleep(time.Duration(timeout) * time.Second)
 				}
 			}
 		}
