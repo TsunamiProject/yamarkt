@@ -68,6 +68,16 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 				if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
 					continue
 				}
+				if resp.StatusCode == http.StatusTooManyRequests {
+					//parsing Retry-After header to timeout variable for making sleep on Retry-After header value
+					timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
+					if err != nil {
+						log.Printf("UpdateOrderStatus service. Error while converting Retry-After header to int: %s", err)
+						time.Sleep(config.RetryAfterErrorDefaultTimeout)
+					} else {
+						time.Sleep(time.Duration(timeout) * time.Second)
+					}
+				}
 				if resp.StatusCode == http.StatusOK {
 					oi := models.OrderInfo{}
 					//decoding response from accrual system to OrderInfo struct
@@ -95,16 +105,6 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 				err = resp.Body.Close()
 				if err != nil {
 					log.Printf("UpdateOrderStatus service. Error while closing response body: %s", err)
-				}
-				if resp.StatusCode == http.StatusTooManyRequests {
-					//parsing Retry-After header to timeout variable for making sleep on Retry-After header value
-					timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
-					if err != nil {
-						log.Printf("UpdateOrderStatus service. Error while converting Retry-After header to int: %s", err)
-						time.Sleep(config.RetryAfterErrorDefaultTimeout)
-					} else {
-						time.Sleep(time.Duration(timeout) * time.Second)
-					}
 				}
 			}
 		}
