@@ -34,6 +34,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 	os := service.NewOrderService(s, "")
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
@@ -102,6 +103,7 @@ func TestHandler_OrderList(t *testing.T) {
 	os := service.NewOrderService(s, "")
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()

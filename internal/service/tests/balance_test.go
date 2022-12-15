@@ -45,6 +45,7 @@ func TestHandler_GetCurrentBalance(t *testing.T) {
 	bs := service.NewBalanceService(s)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
@@ -88,6 +89,7 @@ func TestHandler_CreateWithdrawal(t *testing.T) {
 	bs := service.NewBalanceService(s)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
@@ -145,6 +147,7 @@ func TestHandler_GetWithdrawalsList(t *testing.T) {
 	bs := service.NewBalanceService(s)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
