@@ -2,6 +2,7 @@ package service__test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,12 +30,22 @@ func TestHandler_Register(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		{
+			name:       "#2. User service. Register. Negative",
+			inputLogin: "wrong",
+			inputStruct: models.Credentials{
+				Login: "wrong",
+				Pass:  "wrong",
+			},
+			expectedError: errors.New("internal server error"),
+		},
 	}
 
 	s := &storagemock.UserStorage{}
 	us := service.NewUserService(s)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
@@ -61,12 +72,22 @@ func TestHandler_Auth(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		{
+			name:       "#2. User service. Auth. Negative",
+			inputLogin: "wrong",
+			inputStruct: models.Credentials{
+				Login: "wrong",
+				Pass:  "wrong",
+			},
+			expectedError: errors.New("internal server error"),
+		},
 	}
 
 	s := &storagemock.UserStorage{}
 	us := service.NewUserService(s)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), config.StorageContextTimeout)
 			defer cancel()
