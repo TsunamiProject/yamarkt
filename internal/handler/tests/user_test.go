@@ -116,6 +116,7 @@ func TestHandler_Auth(t *testing.T) {
 	uh := handler.NewUserHandler(us)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, bytes.NewBufferString(tCase.inputBody))
 			w := httptest.NewRecorder()

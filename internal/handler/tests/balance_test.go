@@ -54,6 +54,7 @@ func TestHandler_GetCurrentBalance(t *testing.T) {
 	bh := handler.NewBalanceHandler(bs)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, nil)
 			claims := map[string]interface{}{
@@ -119,6 +120,7 @@ func TestHandler_CreateWithdrawal(t *testing.T) {
 	bh := handler.NewBalanceHandler(bs)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, bytes.NewBufferString(tCase.inputBody))
 			claims := map[string]interface{}{
@@ -193,6 +195,7 @@ func TestHandler_GetWithdrawalList(t *testing.T) {
 
 	for _, tCase := range tests {
 		t.Run(tCase.name, func(t *testing.T) {
+			tCase := tCase
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, nil)
 			claims := map[string]interface{}{
 				"login": tCase.inputLogin,

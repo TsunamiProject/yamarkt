@@ -126,6 +126,7 @@ func TestHandler_OrderList(t *testing.T) {
 	oh := handler.NewOrderHandler(os)
 
 	for _, tCase := range tests {
+		tCase := tCase
 		t.Run(tCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(tCase.inputMethod, tCase.inputEndpoint, nil)
 			claims := map[string]interface{}{
