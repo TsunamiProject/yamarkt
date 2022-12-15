@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgconn"
@@ -83,49 +84,39 @@ func (ps *PostgresStorage) UpdateOrder(ctx context.Context, login string, oi mod
 		log.Printf("UpdateOrder. Error while creating tx instance: %s", err)
 		return err
 	}
-	defer tx.Rollback()
-	{
-		//sending update user order query with new info about order status and accrual
-		_, err = ps.PostgresQL.Exec(updateUserOrderQuery, login, oi.Order, oi.Status, oi.Accrual)
+	defer func(tx *sql.Tx) {
+		err = tx.Rollback()
 		if err != nil {
-			log.Printf("UpdateOrder. Error while updating user order info: %s", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				log.Printf("UpdateOrder. Rollback error while updating user order info: %s", err)
-			}
+			log.Printf("UpdateOrder. Transaction rollback error: %s", err)
+		}
+	}(tx)
+
+	//sending update user order query with new info about order status and accrual
+	_, err = tx.Exec(updateUserOrderQuery, login, oi.Order, oi.Status, oi.Accrual)
+	if err != nil {
+		log.Printf("UpdateOrder. Error while updating user order info: %s", err)
+		return err
+	}
+
+	if oi.Accrual.GreaterThan(decimal.NewFromInt(0)) {
+		var dbBalance decimal.Decimal
+		//sending query for getting user balance
+		err = ps.PostgresQL.QueryRow(getUserBalanceQuery, login).Scan(&dbBalance)
+		if err != nil {
+			log.Printf("UpdateOrder. Error while scanning get user balance query result: %s", err)
+			return err
+		}
+		log.Printf("UpdateOrder. Before. Login: %s: Balance: %s", login, dbBalance)
+		dbBalance = oi.Accrual.Add(dbBalance)
+		log.Printf("UpdateOrder. After. Login: %s: Balance : %s", login, dbBalance)
+
+		//sending update user balance query to update user actual balance
+		_, err = tx.Exec(updateUserBalanceQuery, login, dbBalance)
+		if err != nil {
+			log.Printf("UpdateOrder. Error while updating user balance: %s", err)
 			return err
 		}
 	}
-	{
-		if oi.Accrual.GreaterThan(decimal.NewFromInt(0)) {
-			var dbBalance decimal.Decimal
-			//sending query for getting user balance
-			err = ps.PostgresQL.QueryRow(getUserBalanceQuery, login).Scan(&dbBalance)
-			if err != nil {
-				log.Printf("UpdateOrder. Error while scanning get user balance query result: %s", err)
-				rollbackErr := tx.Rollback()
-				if err != nil {
-					log.Printf("UpdateOrder. Rollback error after getting user balance: %s", rollbackErr)
-				}
-				return err
-			}
-			log.Printf("UpdateOrder. Before. Login: %s: Balance: %s", login, dbBalance)
-			dbBalance = oi.Accrual.Add(dbBalance)
-			log.Printf("UpdateOrder. After. Login: %s: Balance : %s", login, dbBalance)
-
-			//sending update user balance query to update user actual balance
-			_, err = ps.PostgresQL.Exec(updateUserBalanceQuery, login, dbBalance)
-			if err != nil {
-				log.Printf("UpdateOrder. Error while updating user balance: %s", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					log.Printf("UpdateOrder. Rollback error after updating user balance: %s", rollbackErr)
-				}
-				return err
-			}
-		}
-	}
-
 	//committing transaction
 	err = tx.Commit()
 	if err != nil {

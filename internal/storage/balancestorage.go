@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgconn"
@@ -20,7 +21,12 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 	if err != nil {
 		log.Printf("CreateWithdrawal. Error while creating tx instance: %s", err)
 	}
-	defer tx.Rollback()
+	defer func(tx *sql.Tx) {
+		err = tx.Rollback()
+		if err != nil {
+			log.Printf("CreateWithdrawal. Transaction rollback error: %s", err)
+		}
+	}(tx)
 
 	var balanceWithdrawn decimal.Decimal
 	var balanceCurrent decimal.Decimal
@@ -28,18 +34,10 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 	err = ps.PostgresQL.QueryRow(getUserWithdrawnInfoQuery, login).Scan(&balanceCurrent, &balanceWithdrawn)
 	if err != nil {
 		log.Printf("CreateWithdrawal. Error while scanning user withdrawn info query result: %s", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			log.Printf("CreateWithdrawal. Rollback error after getting user withdrawn info: %s", rollbackErr)
-		}
 		return err
 	}
 	//if withdrawal order sum greater than actual user balance
 	if withdrawal.Sum.GreaterThan(balanceCurrent) {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			log.Printf("rollback error after getting user withdrawn info: %s", rollbackErr)
-		}
 		//returning no funds error
 		return customErr.ErrNoFunds
 	}
@@ -51,33 +49,24 @@ func (ps *PostgresStorage) CreateWithdrawal(ctx context.Context, login string, w
 	balanceCurrent = balanceCurrent.Sub(withdrawal.Sum)
 	log.Printf("CreateWithdrawal. Login: %s: Current balance: %s", login, balanceCurrent)
 
-	{
-		//sending create user withdrawal query for create new withdrawal if not exists
-		_, err = ps.PostgresQL.Exec(createUserWithdrawalQuery, withdrawal.Order, login, withdrawal.Sum)
-		if err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-				//returns withdrawal already exists error
-				return customErr.ErrWithdrawalOrderAlreadyExist
-			}
-			log.Printf("CreateWithdrawal. Error while creating new user withdrawal: %s", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				log.Printf("CreateWithdrawal. Rollback error after creating new user withdrawal: %s", rollbackErr)
-			}
-			return err
+	//sending create user withdrawal query for create new withdrawal if not exists
+	_, err = tx.Exec(createUserWithdrawalQuery, withdrawal.Order, login, withdrawal.Sum)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			//returns withdrawal already exists error
+			return customErr.ErrWithdrawalOrderAlreadyExist
 		}
-		//sending update user balance after creating new withdrawal query
-		_, err = ps.PostgresQL.Exec(updateUserWithdrawalBalanceQuery, login, balanceCurrent, balanceWithdrawn)
-		if err != nil {
-			log.Printf("CreateWithdrawal. Error while updating user balance after creating new withdrawal: %s", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				log.Printf("CreateWithdrawal. Rollback error after updating user balance: %s", rollbackErr)
-			}
-			return err
-		}
+		log.Printf("CreateWithdrawal. Error while creating new user withdrawal: %s", err)
+		return err
 	}
+	//sending update user balance after creating new withdrawal query
+	_, err = tx.Exec(updateUserWithdrawalBalanceQuery, login, balanceCurrent, balanceWithdrawn)
+	if err != nil {
+		log.Printf("CreateWithdrawal. Error while updating user balance after creating new withdrawal: %s", err)
+		return err
+	}
+
 	//committing transaction
 	err = tx.Commit()
 	if err != nil {
