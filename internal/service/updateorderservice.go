@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"sync"
@@ -30,6 +31,12 @@ func NewUpdateOrderService(os UpdateOrderStorage, accURL string) *UpdateOrderSer
 		storage:    os,
 		AccrualURL: accURL,
 	}
+}
+
+type ResponseFields struct {
+	body    []byte
+	status  int
+	headers http.Header
 }
 
 //UpdateOrderStatus service for sending requests to accrual system
@@ -60,29 +67,33 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					continue
 				}
 				//making request to accrual system
-				resp, err := client.Do(req)
+				//resp, err := client.Do(req)
+				//if err != nil {
+				//	log.Printf("UpdateOrderStatus service. Error while making request to accrual system: %s", err)
+				//	continue
+				//}
+				resp, err := GetAccrualInfo(req, &client)
 				if err != nil {
 					log.Printf("UpdateOrderStatus service. Error while making request to accrual system: %s", err)
 					continue
 				}
-				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %d", resp.StatusCode)
-				if resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusConflict {
+				log.Printf("UpdateOrderStatus service. Received status code from accrual system: %d", resp.status)
+				if resp.status == http.StatusNoContent || resp.status == http.StatusConflict {
 					continue
 				}
-				if resp.StatusCode == http.StatusTooManyRequests {
+				if resp.status == http.StatusTooManyRequests {
 					//parsing Retry-After header to timeout variable for making sleep on Retry-After header value
-					timeout, err := strconv.Atoi(resp.Header.Get("Retry-After"))
+					timeout, err := strconv.Atoi(resp.headers.Get("Retry-After"))
 					if err != nil {
 						log.Printf("UpdateOrderStatus service. Error while converting Retry-After header to int: %s", err)
-						time.Sleep(config.RetryAfterErrorDefaultTimeout)
-					} else {
-						time.Sleep(time.Duration(timeout) * time.Second)
+						timeout = int(config.RetryAfterErrorDefaultTimeout.Seconds())
 					}
+					time.Sleep(time.Duration(timeout) * time.Second)
 				}
-				if resp.StatusCode == http.StatusOK {
+				if resp.status == http.StatusOK {
 					oi := models.OrderInfo{}
 					//decoding response from accrual system to OrderInfo struct
-					err = json.NewDecoder(resp.Body).Decode(&oi)
+					err = json.Unmarshal(resp.body, &oi)
 					if err != nil {
 						log.Printf("UpdateOrderStatus service. Error while unmarshalling resp from accrual service: %s", err)
 						continue
@@ -92,24 +103,43 @@ func (uo *UpdateOrderService) UpdateOrderStatus(ctx context.Context, wg *sync.Wa
 					updateContext, cancel := context.WithTimeout(ctx, config.StorageContextTimeout)
 					//calling UpdateOrder storage method
 					err = uo.storage.UpdateOrder(updateContext, unprocessedOrderList[order].Login, oi)
+					cancel()
 					if err != nil {
-						cancel()
 						log.Printf("UpdateOrderStatus service. Error while updating order :%s", err)
 						continue
 					}
-					cancel()
 					if oi.Status == config.InvalidOrderStatus || oi.Status == config.ProcessedOrderStatus {
 						log.Printf("UpdateOrderStatus service. Order %s has updated status to %s", oi.Order, oi.Status)
 						continue
 					}
 				}
-				err = resp.Body.Close()
-				if err != nil {
-					log.Printf("UpdateOrderStatus service. Error while closing response body: %s", err)
-				}
 			}
 		}
 	}
+}
+
+func GetAccrualInfo(r *http.Request, cl *http.Client) (res ResponseFields, err error) {
+	resp, err := cl.Do(r)
+	if err != nil {
+		log.Printf("GetAccrualInfo. Error while making request to accrual system: %s", err)
+		return ResponseFields{}, err
+	}
+	rb, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("GetAccrualInfo. Error while reading response body: %s", err)
+		return ResponseFields{}, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		log.Printf("GetAccrualInfo. Error while closing response body: %s", err)
+		return ResponseFields{}, err
+	}
+	res = ResponseFields{
+		body:    rb,
+		status:  resp.StatusCode,
+		headers: resp.Header,
+	}
+	return res, nil
 }
 
 //GetUnprocessedOrdersList service for getting unprocessed orders from db
